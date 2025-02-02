@@ -1,3 +1,10 @@
+//
+//  QuestionDetailViewController.swift
+//  recap_charts
+//
+//  Created by admin70 on 13/11/24.
+//
+
 import UIKit
 import FirebaseFirestore
 
@@ -223,4 +230,8 @@ class QuestionDetailViewController: UIViewController {
         }
     }
 }
-#Preview{ QuestionDetailViewController() }
+
+
+#Preview {
+    QuestionDetailViewController()
+}

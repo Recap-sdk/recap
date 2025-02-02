@@ -116,15 +116,26 @@ extension FamilyLoginViewController {
 
             if let _ = matchedFamilyMember {
                 print("Family member authenticated")
+                
+                // Initialize FamilyViewController and embed it in a UINavigationController
                 let reportsVC = FamilyViewController()
-                if let navController = self.navigationController {
-                    navController.pushViewController(reportsVC, animated: true)
-                } else {
-                    self.present(reportsVC, animated: true)
+                let navigationController = UINavigationController(rootViewController: reportsVC)
+                
+                // Get the current window to set the root view controller
+                if let window = UIApplication.shared.windows.first {
+                    window.rootViewController = navigationController
+                    window.makeKeyAndVisible()  // Ensure it becomes the key window
+                    
+                    // Optionally animate the transition to the new root view controller
+                    UIView.animate(withDuration: 0.3, animations: {
+                        navigationController.view.frame = window.bounds
+                    })
                 }
             } else {
                 self.showAlert(message: "Incorrect email or password. Please try again.")
             }
+
+
         }
     }
     

@@ -137,3 +137,5 @@ class FamilyViewController: UIViewController {
         present(navController, animated: true)
     }
 }
+#Preview
+{FamilyViewController()}

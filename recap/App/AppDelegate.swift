@@ -43,6 +43,10 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
         return GIDSignIn.sharedInstance.handle(url)
     }
 
-
+    func applicationDidBecomeActive(_ application: UIApplication) {
+        // Automatically fetch questions when app comes to the foreground
+        let dailyQuestionVC = DailyQuestionDetailViewController()
+        dailyQuestionVC.loadQuestions()
+    }
 }
 

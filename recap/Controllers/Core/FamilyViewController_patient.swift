@@ -262,6 +262,6 @@ class FamilyViewController_patient: UIViewController, UICollectionViewDelegate, 
     }
 }
 
-#Preview() {
-    FamilyViewController()
+#Preview{
+    FamilyViewController_patient()
 }

@@ -74,6 +74,8 @@ class TrendsCardView: UIView {
         immediateInsightsButton.isHidden = false
         recentInsightsButton.isHidden = true
         remoteInsightsButton.isHidden = true
+        
+        
 
         NSLayoutConstraint.activate([
             titleLabel.topAnchor.constraint(equalTo: self.topAnchor, constant: 16),

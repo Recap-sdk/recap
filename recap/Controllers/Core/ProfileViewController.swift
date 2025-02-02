@@ -276,3 +276,4 @@ extension ProfileViewController: UITableViewDelegate, UITableViewDataSource {
         }
     }
 }
+#Preview {ProfileViewController()}

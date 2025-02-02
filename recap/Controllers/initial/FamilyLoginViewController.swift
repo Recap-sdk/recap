@@ -109,7 +109,7 @@ class FamilyLoginViewController: UIViewController {
     // MARK: - Lifecycle
     override func viewDidLoad() {
         super.viewDidLoad()
-        title = "Patient Login"
+        title = "Family Login"
         setupUI()
     }
     

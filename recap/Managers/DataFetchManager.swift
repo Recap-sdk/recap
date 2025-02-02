@@ -52,7 +52,7 @@ class DataFetch: DataFetchProtocol {
             let familyMembers = snapshot?.documents.compactMap { doc -> FamilyMember? in
                 let data = doc.data()
                 return FamilyMember(
-                    id: UUID(uuidString: doc.documentID) ?? UUID(),
+                    id: doc.documentID,
                     name: data["name"] as? String ?? "",
                     relationship: data["relationship"] as? String ?? "",
                     phone: data["phone"] as? String ?? "",

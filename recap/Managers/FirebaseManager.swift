@@ -150,4 +150,9 @@ class FirebaseManager {
             completion(familyMembers, nil)
         }
     }
+    func uploadDocument(collectionPath: String, documentId: String, data: [String: Any], completion: @escaping (Error?) -> Void) {
+           firestore.collection(collectionPath).document(documentId).setData(data) { error in
+               completion(error)
+           }
+       }
 }

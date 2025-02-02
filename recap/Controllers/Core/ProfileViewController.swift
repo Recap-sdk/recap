@@ -8,6 +8,7 @@ import Foundation
 import SDWebImage
 import UIKit
 import FirebaseAuth
+import FirebaseFirestore
 
 class ProfileViewController: UIViewController {
     private var userDetails: [String: Any]?
@@ -70,6 +71,11 @@ class ProfileViewController: UIViewController {
                 UserDefaultsStorageProfile.shared.saveProfile(details: profile, image: nil) { success in
                     if success {
                         self.updateUI(with: profile)
+                        self.dataFetchManager.fetchLastMemoryCheck(userId: userId) { [weak self] date in
+                            DispatchQueue.main.async {
+                                self?.updateMemoryCheckDate(date)
+                            }
+                        }
                     } else {
                         print("Failed to save profile locally.")
                     }
@@ -213,7 +219,7 @@ extension ProfileViewController: UITableViewDelegate, UITableViewDataSource {
                         details["stage"] as? String ?? "Not Set",
                     ]
                 }
-                return Array(repeating: "Not Set", count: 6)
+                return Array(repeating: "Not Set", count: 7)
             }()
             
             cell.textLabel?.text = titles[indexPath.row]
@@ -223,7 +229,7 @@ extension ProfileViewController: UITableViewDelegate, UITableViewDataSource {
             
         case 1:
             cell.textLabel?.text = "Memory Check"
-            cell.detailTextLabel?.text = "Last check: Today"
+            cell.detailTextLabel?.text = "Last check: Fetching"
             cell.imageView?.image = UIImage(systemName: "brain.head.profile")
             cell.imageView?.tintColor = .systemGreen
             cell.selectionStyle = .default
@@ -273,6 +279,13 @@ extension ProfileViewController: UITableViewDelegate, UITableViewDataSource {
         case 0: return "This information helps us personalize your experience."
         case 1: return "Regular memory checks help track your progress."
         default: return nil
+        }
+    }
+
+    private func updateMemoryCheckDate(_ date: String) {
+        let indexPath = IndexPath(row: 0, section: 1)
+        if let cell = tableView.cellForRow(at: indexPath) {
+            cell.detailTextLabel?.text = "Last check: \(date)"
         }
     }
 }

@@ -86,10 +86,10 @@ class FamilyMemberDetailViewController: UIViewController {
     private func createProfileImageView() -> UIImageView {
         let imageView = UIImageView()
         if let savedImage = UserDefaultsStorageFamilyMember.shared.getFamilyMemberImage(for: member.id) {
-               imageView.image = savedImage
-           } else {
-               imageView.image = UIImage(systemName: "person.circle.fill")
-           }
+            imageView.image = savedImage
+        } else {
+            imageView.image = UIImage(systemName: "person.circle.fill")
+        }
 //        imageView.image = UIImage(named: member.imageName)
 //        imageView
 //            .sd_setImage(

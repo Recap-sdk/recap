@@ -1,4 +1,11 @@
+//
+//  AddQuestionViewController.swift
+//
+//  Created by admin70 on 13/11/24.
+//
+
 import UIKit
+import FirebaseFirestore
 
 class AddQuestionViewController: UIViewController, UIImagePickerControllerDelegate, UINavigationControllerDelegate {
     
@@ -70,6 +77,10 @@ class AddQuestionViewController: UIViewController, UIImagePickerControllerDelega
         return button
     }()
     
+    // MARK: - Properties
+    
+    private var verifiedUserDocID: String = "userDocumentID" // Replace this with your actual user doc ID logic
+    
     // MARK: - Lifecycle
     override func viewDidLoad() {
         super.viewDidLoad()
@@ -87,6 +98,21 @@ class AddQuestionViewController: UIViewController, UIImagePickerControllerDelega
         view.addSubview(questionTextField)
         view.addSubview(saveButton)
         
+        // Layout constraints for the main elements
+        NSLayoutConstraint.activate([
+            questionTypeSegment.topAnchor.constraint(equalTo: view.safeAreaLayoutGuide.topAnchor, constant: 20),
+            questionTypeSegment.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: 20),
+            questionTypeSegment.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -20),
+            
+            questionTextField.topAnchor.constraint(equalTo: questionTypeSegment.bottomAnchor, constant: 20),
+            questionTextField.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: 20),
+            questionTextField.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -20),
+            questionTextField.heightAnchor.constraint(equalToConstant: 50),
+            
+            saveButton.bottomAnchor.constraint(equalTo: view.safeAreaLayoutGuide.bottomAnchor, constant: -30),
+            saveButton.centerXAnchor.constraint(equalTo: view.centerXAnchor)
+        ])
+        
         // Initial layout setup
         setupQuestionTypeLayout()
     }
@@ -98,8 +124,9 @@ class AddQuestionViewController: UIViewController, UIImagePickerControllerDelega
     }
     
     private func setupQuestionTypeLayout() {
-        clearAllSubviews()
-        
+        // Clear the subviews that are specific to a layout type
+        clearLayoutSubviews()
+
         if questionTypeSegment.selectedSegmentIndex == 0 {
             setupTextOnlyLayout()
         } else {
@@ -114,166 +141,117 @@ class AddQuestionViewController: UIViewController, UIImagePickerControllerDelega
         
         // Layout constraints for Text Only
         NSLayoutConstraint.activate([
-            questionTypeSegment.topAnchor.constraint(equalTo: view.safeAreaLayoutGuide.topAnchor, constant: 20),
-            questionTypeSegment.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: 20),
-            questionTypeSegment.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -20),
-            
             questionTextField.topAnchor.constraint(equalTo: questionTypeSegment.bottomAnchor, constant: 20),
             questionTextField.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: 20),
             questionTextField.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -20),
-            questionTextField.heightAnchor.constraint(equalToConstant: 50),
-            
-            saveButton.bottomAnchor.constraint(equalTo: view.safeAreaLayoutGuide.bottomAnchor, constant: -20),
-            saveButton.centerXAnchor.constraint(equalTo: view.centerXAnchor),
-            saveButton.heightAnchor.constraint(equalToConstant: 50),
-            saveButton.widthAnchor.constraint(equalToConstant: 200)
+            questionTextField.heightAnchor.constraint(equalToConstant: 50)
         ])
         
-        setupTextOnlyOptions()
+        for (index, optionTextField) in optionTextFields.enumerated() {
+            NSLayoutConstraint.activate([
+                optionTextField.topAnchor.constraint(equalTo: questionTextField.bottomAnchor, constant: CGFloat(20 + index * 60)),
+                optionTextField.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: 20),
+                optionTextField.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -20),
+                optionTextField.heightAnchor.constraint(equalToConstant: 50)
+            ])
+        }
+        
+        NSLayoutConstraint.activate([
+            saveButton.bottomAnchor.constraint(equalTo: view.safeAreaLayoutGuide.bottomAnchor, constant: -80), // Change the constant value here to move it upwards
+            saveButton.centerXAnchor.constraint(equalTo: view.centerXAnchor),
+            saveButton.heightAnchor.constraint(equalToConstant: 50),
+            saveButton.widthAnchor.constraint(equalTo: view.widthAnchor, constant: -40)
+        ])
+
     }
     
     private func setupTextAndImageLayout() {
-        view.addSubview(questionTextField)
+        // Add Image Button and Image View for text and image layout
         view.addSubview(imageView)
         view.addSubview(addImageButton)
-        optionTextFields.forEach { view.addSubview($0) }
-        view.addSubview(saveButton)
         
-        // Layout constraints for Text & Image
-        imageView.isHidden = false
-        addImageButton.isHidden = false
-        
+        // Layout constraints for Text and Image
         NSLayoutConstraint.activate([
-            questionTypeSegment.topAnchor.constraint(equalTo: view.safeAreaLayoutGuide.topAnchor, constant: 20),
-            questionTypeSegment.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: 20),
-            questionTypeSegment.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -20),
-            
-            questionTextField.topAnchor.constraint(equalTo: questionTypeSegment.bottomAnchor, constant: 20),
-            questionTextField.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: 20),
-            questionTextField.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -20),
-            questionTextField.heightAnchor.constraint(equalToConstant: 50),
-            
             imageView.topAnchor.constraint(equalTo: questionTextField.bottomAnchor, constant: 20),
             imageView.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: 20),
             imageView.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -20),
             imageView.heightAnchor.constraint(equalToConstant: 200),
             
             addImageButton.topAnchor.constraint(equalTo: imageView.bottomAnchor, constant: 10),
-            addImageButton.centerXAnchor.constraint(equalTo: view.centerXAnchor),
-            addImageButton.heightAnchor.constraint(equalToConstant: 40),
-            addImageButton.widthAnchor.constraint(equalToConstant: 120),
-            
-            saveButton.bottomAnchor.constraint(equalTo: view.safeAreaLayoutGuide.bottomAnchor, constant: -20),
-            saveButton.centerXAnchor.constraint(equalTo: view.centerXAnchor),
-            saveButton.heightAnchor.constraint(equalToConstant: 50),
-            saveButton.widthAnchor.constraint(equalToConstant: 200)
+            addImageButton.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: 20),
+            addImageButton.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -20),
+            addImageButton.heightAnchor.constraint(equalToConstant: 50)
         ])
         
-        setupTextAndImageOptions()
+        // Option Text Fields and Save Button constraints will be the same as in TextOnly layout
+        setupTextOnlyLayout()
     }
-    
-    private func setupTextOnlyOptions() {
-        let spacing: CGFloat = 20
-        var previousView: UIView = questionTextField
-        
-        for option in optionTextFields {
-            NSLayoutConstraint.activate([
-                option.topAnchor.constraint(equalTo: previousView.bottomAnchor, constant: spacing),
-                option.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: 20),
-                option.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -20),
-                option.heightAnchor.constraint(equalToConstant: 40)
-            ])
-            previousView = option
-        }
-    }
-    
-    private func setupTextAndImageOptions() {
-        let rows = 2
-        let columns = 2
-        let spacing: CGFloat = 10
-        let widthMultiplier: CGFloat = 0.45
-        
-        for (index, option) in optionTextFields.enumerated() {
-            let row = index / columns
-            let column = index % columns
-            
-            NSLayoutConstraint.activate([
-                option.topAnchor.constraint(equalTo: addImageButton.bottomAnchor, constant: CGFloat(row) * 50 + spacing),
-                option.leadingAnchor.constraint(equalTo: column == 0 ? view.leadingAnchor : optionTextFields[index - 1].trailingAnchor, constant: spacing),
-                option.widthAnchor.constraint(equalTo: view.widthAnchor, multiplier: widthMultiplier),
-                option.heightAnchor.constraint(equalToConstant: 40)
-            ])
-        }
-    }
-    
-    // MARK: - Button Actions
-    
-    @objc private func questionTypeChanged() {
-        setupQuestionTypeLayout()
-    }
-    
-    @objc private func selectImage() {
-        let pickerController = UIImagePickerController()
-        pickerController.delegate = self
-        pickerController.sourceType = .photoLibrary
-        present(pickerController, animated: true, completion: nil)
-    }
-    
+
+    // MARK: - Actions
+
     @objc private func saveQuestion() {
-        guard let title = questionTextField.text, !title.isEmpty else {
-            let alert = UIAlertController(title: "Error", message: "Please enter a question title", preferredStyle: .alert)
-            alert.addAction(UIAlertAction(title: "OK", style: .default, handler: nil))
-            present(alert, animated: true, completion: nil)
+        let db = Firestore.firestore()
+        
+        // Gather data from the UI elements
+        let questionText = questionTextField.text ?? ""
+        let optionTexts = optionTextFields.map { $0.text ?? "" }
+        
+        // Ensure required fields are filled before saving
+        guard !questionText.isEmpty, !optionTexts.contains(where: { $0.isEmpty }) else {
+            print("Error: Please fill in all fields")
             return
         }
         
-        // MARK: - Commented Out Data Handling
-        /*
-        let options = optionTextFields.map { $0.text ?? "" }
+        // Add new question to Firestore
+        let newQuestion: [String: Any] = [
+            "text": questionText,
+            "category": "recentMemory", // Updated category
+            "subcategory": "health", // Updated subcategory
+            "tag": "custom", // Updated tag
+            "answerOptions": optionTexts,
+            "image": NSNull(), // Add image logic if needed
+            "isAnswered": false,
+            "askInterval": 604800, // 1 week interval
+            "lastAsked": NSNull(),
+            "timesAsked": 0,
+            "timesAnsweredCorrectly": 0
+        ]
         
-        // CoreData saving
-        let context = PersistenceController.shared.persistentContainer.viewContext
-        
-        // Initialize newQuestion
-        let newQuestion = Question(context: context)
-        newQuestion.text = title
-        newQuestion.answerOptions = options
-        newQuestion.isAnswered = false
-        newQuestion.image = imageView.image?.jpegData(compressionQuality: 0.8) // Store image data
-        
-        // Save the context
-        do {
-            try context.save()
-            print("Question saved successfully.")
-            
-            // Sending the new question (this is safe because newQuestion is already initialized)
-            sendNewQuestion(newQuestion)
-            
-            dismiss(animated: true, completion: nil)
-        } catch {
-            print("Failed to save question: \(error.localizedDescription)")
+        // Save question to Firestore
+        db.collection("Questions").addDocument(data: newQuestion) { error in
+            if let error = error {
+                print("Error saving question: \(error.localizedDescription)")
+            } else {
+                // Document was saved successfully, print the document ID
+                let documentID = db.collection("Questions").document().documentID
+                print("Question saved successfully. Document ID: \(documentID)")
+                
+                // Change UI to indicate success
+                self.saveButton.setTitle("Saved", for: .normal)
+                self.saveButton.backgroundColor = .systemGreen
+                self.saveButton.setTitleColor(.white, for: .normal)
+            }
         }
-        */
     }
     
-    // MARK: - Helper Methods
+    @objc func questionTypeChanged() {
+        setupQuestionTypeLayout()
+    }
     
-    private func clearAllSubviews() {
-        questionTextField.removeFromSuperview()
+    @objc func selectImage() {
+        // Your code for selecting an image
+    }
+    
+    func clearLayoutSubviews() {
+        // Remove only specific subviews, not everything
+        if questionTextField.isDescendant(of: view) {
+            questionTextField.removeFromSuperview()
+        }
+        optionTextFields.forEach { $0.removeFromSuperview() }
         imageView.removeFromSuperview()
         addImageButton.removeFromSuperview()
-        optionTextFields.forEach { $0.removeFromSuperview() }
-        saveButton.removeFromSuperview()
     }
-    
-    // MARK: - Image Picker Delegate
-    
-    func imagePickerController(_ picker: UIImagePickerController, didFinishPickingMediaWithInfo info: [UIImagePickerController.InfoKey : Any]) {
-        picker.dismiss(animated: true, completion: nil)
-        
-        if let selectedImage = info[.originalImage] as? UIImage {
-            imageView.image = selectedImage
-            imageView.isHidden = false
-        }
-    }
+}
+#Preview {
+    AddQuestionViewController()
 }

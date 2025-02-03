@@ -68,26 +68,108 @@ extension FamilyLoginViewController {
         }
     }
 
+//    @objc func loginTapped() {
+//        print("Login tapped")
+//
+//        guard let loginVC = self as? FamilyLoginViewController else { return }
+//
+//        // Retrieve the document ID from UserDefaults
+//        guard let userDocID = UserDefaults.standard.string(forKey: "verifiedUserDocID") else {
+//            print("No user document found. Please verify UID first.")
+//            loginVC.showAlert(message: "Please verify patient UID first.")
+//            return
+//        }
+//
+//        let patientEmail = loginVC.emailField.text ?? ""
+//        let enteredPassword = loginVC.passwordField.text ?? ""
+//
+//        print("Email entered: \(patientEmail)")  // Log the entered email
+//        print("Password entered: \(enteredPassword)")  // Log the entered password
+//
+//        let db = Firestore.firestore()
+//
+//        db.collection("users").document(userDocID).collection("family_members").getDocuments { (familySnapshot, error) in
+//            if let error = error {
+//                print("Error fetching family members: \(error.localizedDescription)")
+//                loginVC.showAlert(message: "Unable to retrieve family details.")
+//                return
+//            }
+//
+//            guard let familyDocs = familySnapshot?.documents, !familyDocs.isEmpty else {
+//                loginVC.showAlert(message: "No family members found.")
+//                return
+//            }
+//
+//            var matchedFamilyMember: [String: Any]? = nil
+//
+//            for familyDoc in familyDocs {
+//                let familyData = familyDoc.data()
+//                // Log the fetched family member data for debugging purposes
+//                print("Fetched family member data: \(familyData)")
+//
+//                if let storedPassword = familyData["password"] as? String, storedPassword == enteredPassword,
+//                   let email = familyData["email"] as? String, email == patientEmail {
+//                    matchedFamilyMember = familyData
+//                    break
+//                }
+//            }
+////            if let _ = matchedFamilyMember {
+////                print("Family member authenticated")
+////
+////                let db = Firestore.firestore()
+////                db.collection("users").document(userDocID).getDocument { (document, error) in
+////                    if let error = error {
+////                        print("Error fetching patient details: \(error.localizedDescription)")
+////                        return
+////                    }
+////
+////                    guard let document = document, document.exists else {
+////                        print("Patient document not found.")
+////                        return
+////                    }
+////
+////                    let userData = document.data() ?? [:]
+////                    print("Fetched user data for patient: \(userData)")
+////
+////                    // Store patient details in UserDefaults
+////                    UserDefaults.standard.set(userData, forKey: "patientDetails")
+////                    print("Patient details saved in UserDefaults.")
+////
+////                    // Navigate to FamilyViewController
+////                    DispatchQueue.main.async {
+////                        let familyVC = FamilyViewController()
+////                        if let window = UIApplication.shared.windows.first {
+////                            let navigationController = UINavigationController(rootViewController: familyVC)
+////                            window.rootViewController = navigationController
+////                            window.makeKeyAndVisible()
+////                        }
+////                    }
+////                }
+////            } else {
+////                self.showAlert(message: "Incorrect email or password. Please try again.")
+////            }
+//
+//        }
+//    }
     @objc func loginTapped() {
         print("Login tapped")
 
         guard let loginVC = self as? FamilyLoginViewController else { return }
         
-        // Retrieve the document ID from UserDefaults
         guard let userDocID = UserDefaults.standard.string(forKey: "verifiedUserDocID") else {
             print("No user document found. Please verify UID first.")
             loginVC.showAlert(message: "Please verify patient UID first.")
             return
         }
 
-        let patientEmail = loginVC.emailField.text ?? ""
+        let enteredEmail = loginVC.emailField.text ?? ""
         let enteredPassword = loginVC.passwordField.text ?? ""
         
-        print("Email entered: \(patientEmail)")  // Log the entered email
-        print("Password entered: \(enteredPassword)")  // Log the entered password
+        print("Email entered: \(enteredEmail)")
+        print("Password entered: \(enteredPassword)")
 
         let db = Firestore.firestore()
-
+        
         db.collection("users").document(userDocID).collection("family_members").getDocuments { (familySnapshot, error) in
             if let error = error {
                 print("Error fetching family members: \(error.localizedDescription)")
@@ -104,41 +186,54 @@ extension FamilyLoginViewController {
 
             for familyDoc in familyDocs {
                 let familyData = familyDoc.data()
-                // Log the fetched family member data for debugging purposes
                 print("Fetched family member data: \(familyData)")
                 
                 if let storedPassword = familyData["password"] as? String, storedPassword == enteredPassword,
-                   let email = familyData["email"] as? String, email == patientEmail {
+                   let email = familyData["email"] as? String, email == enteredEmail {
                     matchedFamilyMember = familyData
                     break
                 }
             }
 
-            if let _ = matchedFamilyMember {
-                print("Family member authenticated")
-                
-                // Initialize FamilyViewController and embed it in a UINavigationController
-                let reportsVC = FamilyViewController()
-                let navigationController = UINavigationController(rootViewController: reportsVC)
-                
-                // Get the current window to set the root view controller
-                if let window = UIApplication.shared.windows.first {
-                    window.rootViewController = navigationController
-                    window.makeKeyAndVisible()  // Ensure it becomes the key window
-                    
-                    // Optionally animate the transition to the new root view controller
-                    UIView.animate(withDuration: 0.3, animations: {
-                        navigationController.view.frame = window.bounds
-                    })
+            if let matchedMember = matchedFamilyMember {
+                print("Family member authenticated: \(matchedMember)")
+
+                // Store family member details
+                UserDefaults.standard.set(matchedMember, forKey: "familyMemberDetails")
+
+                db.collection("users").document(userDocID).getDocument { (document, error) in
+                    if let error = error {
+                        print("Error fetching patient details: \(error.localizedDescription)")
+                        return
+                    }
+
+                    guard let document = document, document.exists else {
+                        print("Patient document not found.")
+                        return
+                    }
+
+                    let userData = document.data() ?? [:]
+                    print("Fetched user data for patient: \(userData)")
+
+                    // Store patient details
+                    UserDefaults.standard.set(userData, forKey: "patientDetails")
+
+                    // Navigate to FamilyViewController
+                    DispatchQueue.main.async {
+                        let familyVC = TabbarFamilyViewController()
+                        if let window = UIApplication.shared.windows.first {
+                            let navigationController = UINavigationController(rootViewController: familyVC)
+                            window.rootViewController = navigationController
+                            window.makeKeyAndVisible()
+                        }
+                    }
                 }
             } else {
-                self.showAlert(message: "Incorrect email or password. Please try again.")
+                loginVC.showAlert(message: "Incorrect email or password. Please try again.")
             }
-
-
         }
     }
-    
+
     
     @objc func rememberMeTapped() {
         rememberMeButton.isSelected.toggle()

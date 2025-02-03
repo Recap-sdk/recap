@@ -46,15 +46,37 @@ class PatientsViewController: UIViewController, UITableViewDelegate, UITableView
         setupNavigationBar()
         setupUI()
         setupTableView()
+        
+        // Fetch patient details from UserDefaults
+        if let savedUserData = UserDefaults.standard.object(forKey: "patientDetails") as? [String: Any] {
+            userDetails = savedUserData
+        }
+        
         updateUIWithData()
     }
 
     private func updateUIWithData() {
-        // Update UI using passed data
         if let userDetails = userDetails {
             nameLabel.text = "\(userDetails["firstName"] as? String ?? "") \(userDetails["lastName"] as? String ?? "")"
+
+            if let profileImageURL = userDetails["profileImageURL"] as? String, !profileImageURL.isEmpty {
+                if let url = URL(string: profileImageURL) {
+                    // Load the image asynchronously
+                    DispatchQueue.global().async {
+                        if let data = try? Data(contentsOf: url) {
+                            DispatchQueue.main.async {
+                                self.profileImageView.image = UIImage(data: data)
+                            }
+                        }
+                    }
+                }
+            }
+            
+            tableView.reloadData()
         }
     }
+
+    
 
     private func setupNavigationBar() {
         let doneButton = UIBarButtonItem(

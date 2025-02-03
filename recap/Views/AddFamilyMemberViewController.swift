@@ -204,7 +204,7 @@ class AddFamilyMemberViewController: UIViewController, UIImagePickerControllerDe
             addButton.leadingAnchor.constraint(equalTo: nameTextField.leadingAnchor),
             addButton.trailingAnchor.constraint(equalTo: nameTextField.trailingAnchor),
             addButton.heightAnchor.constraint(equalToConstant: 50),
-            addButton.bottomAnchor.constraint(equalTo: contentView.bottomAnchor, constant: -24) // Correctly define bottom constraint
+            addButton.bottomAnchor.constraint(equalTo: contentView.bottomAnchor, constant: -24)
         ])
     }
     
@@ -234,11 +234,6 @@ class AddFamilyMemberViewController: UIViewController, UIImagePickerControllerDe
     }
     
     @objc private func profileImageTapped() {
-        //        var config = PHPickerConfiguration()
-        //        config.selectionLimit = 1
-        //        config.filter = .images
-        
-        //        let picker = PHPickerViewController(configuration: config)
         let picker = UIImagePickerController()
         picker.delegate = self
         picker.allowsEditing = true
@@ -259,6 +254,8 @@ class AddFamilyMemberViewController: UIViewController, UIImagePickerControllerDe
             showAlert(title: "Missing Information", message: "Please fill in all fields")
             return
         }
+        let newMemberId = UUID().uuidString
+        var imagePath = ""
         
         // Get the current patient's ID
         guard let patientId = Auth.auth().currentUser?.uid else {
@@ -266,19 +263,19 @@ class AddFamilyMemberViewController: UIViewController, UIImagePickerControllerDe
             return
         }
         
-        // Save the image locally and get the path
-            var imagePath: String = ""
             if let image = profileImageView.image {
-                imagePath = saveImageToLocalDirectory(image: image)
+                imagePath = saveImageToLocalDirectory(image: image, for: newMemberId)
             }
         
         let newMember = FamilyMember(
+            id: UUID().uuidString,
             name: name,
             relationship: relationship,
             phone: phone,
             email: email,
             password: password,
-            imageName: "",
+//            imageName: "",
+            imageName: newMemberId,
 //            imageURL: ""
             imageURL: imagePath
         )
@@ -287,7 +284,9 @@ class AddFamilyMemberViewController: UIViewController, UIImagePickerControllerDe
         storage.saveFamilyMember(newMember, image: profileImageView.image) { [weak self] success in
             if success {
                 NotificationCenter.default.post(name: Notification.Name("FamilyMemberAdded"), object: nil)
-                print("Saved locally")
+                self?.showAlert(title: "Success", message: "Family member added successfully")
+            } else {
+                self?.showAlert(title: "Error", message: "Failed to save family member")
             }
         }
         
@@ -304,22 +303,22 @@ class AddFamilyMemberViewController: UIViewController, UIImagePickerControllerDe
             }
         }
     }
-    // Save the image to local storage and return its path
-    private func saveImageToLocalDirectory(image: UIImage) -> String {
+    private func saveImageToLocalDirectory(image: UIImage, for memberId: String) -> String {
         let fileManager = FileManager.default
         guard let documentsDirectory = fileManager.urls(for: .documentDirectory, in: .userDomainMask).first else {
             return ""
         }
-        
-        let imageFileName = "\(UUID().uuidString).jpg"
+
+        let imageFileName = "\(memberId).jpg"
         let fileURL = documentsDirectory.appendingPathComponent(imageFileName)
 
         if let imageData = image.jpegData(compressionQuality: 0.8) {
             try? imageData.write(to: fileURL)
         }
 
-        return fileURL.path  // Return the local path to be stored
+        return fileURL.path
     }
+
 }
 
 // MARK: - PHPickerViewControllerDelegate

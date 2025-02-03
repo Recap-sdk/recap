@@ -39,7 +39,16 @@ class FamilyProfileViewController: UIViewController, UITableViewDelegate, UITabl
         setupNavigationBar()
         setupUI()
         setupTableView()
+
+        // Load stored family member details
+        if let familyMemberData = UserDefaults.standard.dictionary(forKey: "familyMemberDetails"),
+           let name = familyMemberData["name"] as? String {
+            nameLabel.text = name
+        } else {
+            nameLabel.text = "Unknown Family Member"
+        }
     }
+
 
     private func setupNavigationBar() {
         title = "Profile"

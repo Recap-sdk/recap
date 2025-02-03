@@ -12,6 +12,7 @@ protocol DataFetchProtocol {
     func fetchRapidQuestions(completion: @escaping ([rapiMemory]?, Error?) -> Void)
     func fetchUserProfile(userId: String, completion: @escaping ([String: Any]?, Error?) -> Void)
     func fetchFamilyMembers(userId: String, completion: @escaping ([FamilyMember]?, Error?) -> Void)
+    func fetchLastMemoryCheck(userId: String, completion: @escaping (String) -> Void)
 }
 
 class DataFetch: DataFetchProtocol {
@@ -51,7 +52,7 @@ class DataFetch: DataFetchProtocol {
             let familyMembers = snapshot?.documents.compactMap { doc -> FamilyMember? in
                 let data = doc.data()
                 return FamilyMember(
-                    id: UUID(uuidString: doc.documentID) ?? UUID(),
+                    id: doc.documentID,
                     name: data["name"] as? String ?? "",
                     relationship: data["relationship"] as? String ?? "",
                     phone: data["phone"] as? String ?? "",
@@ -63,5 +64,28 @@ class DataFetch: DataFetchProtocol {
             }
             completion(familyMembers, nil)
         }
+    }
+    func fetchLastMemoryCheck(userId: String, completion: @escaping (String) -> Void) {
+        FirebaseManager.shared.firestore
+            .collection("users").document(userId)
+            .collection("memoryCheckReports")
+            .order(by: "date", descending: true)
+            .limit(to: 1)
+            .getDocuments { snapshot, error in
+                if let error = error {
+                    print("Error fetching last memory check: \(error)")
+                    completion("Never")
+                    return
+                }
+
+                if let document = snapshot?.documents.first {
+                    let data = document.data()
+                    let timestamp = data["date"] as? Timestamp
+                    let formattedDate = timestamp?.dateValue().formatted(.dateTime.month().day().year()) ?? "Never"
+                    completion(formattedDate)
+                } else {
+                    completion("Never")
+                }
+            }
     }
 }

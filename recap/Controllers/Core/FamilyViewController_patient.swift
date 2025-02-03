@@ -162,18 +162,6 @@ class FamilyViewController_patient: UIViewController, UICollectionViewDelegate, 
             sheet.prefersEdgeAttachedInCompactHeight = true
         }
         present(navController, animated: true, completion: nil)
-
-        // FOR STORYBOARD METHOD
-//        let storyboard = UIStoryboard(name: "AddFamily", bundle: nil)
-//        if let profileVC = storyboard.instantiateViewController(withIdentifier: "AddFamilyMemberViewController2") as? AddFamilyMemberViewController2 {
-//            let navigationController = UINavigationController(rootViewController: profileVC)
-//            if let sheet = navigationController.sheetPresentationController {
-//                sheet.detents = [.large()]
-//                sheet.prefersGrabberVisible = true
-//                sheet.prefersEdgeAttachedInCompactHeight = true
-//            }
-//            present(navigationController, animated: true, completion: nil)
-//        }
     }
 
     // MARK: - Collection View Data Source
@@ -192,9 +180,6 @@ class FamilyViewController_patient: UIViewController, UICollectionViewDelegate, 
             sheet.prefersGrabberVisible = true
             sheet.prefersEdgeAttachedInCompactHeight = true
         }
-
-        // PUSH STYLE
-//        navigationController?.pushViewController(detailVC, animated: true)
 
         present(navController, animated: true, completion: nil)
     }
@@ -236,23 +221,19 @@ class FamilyViewController_patient: UIViewController, UICollectionViewDelegate, 
             return
         }
 
-        // Delete from Firebase
-        FirebaseManager.shared.deleteFamilyMember(for: patientId, memberId: member.id.uuidString) { [weak self] error in
+        // Start by deleting the family member from Firebase
+        FirebaseManager.shared.deleteFamilyMember(for: patientId, memberId: member.id) { [weak self] error in
             if let error = error {
-                print("Failed to delete family member from Firebase: \(error.localizedDescription)")
+                print("Failed to delete family member: \(error.localizedDescription)")
                 self?.showAlert(title: "Error", message: "Failed to delete family member.")
-                return
+            } else {
+                print("Family member deleted successfully")
+                self?.familyMembers.remove(at: indexPath.row)
+                self?.dataProtocol.saveFamilyMembers(self?.familyMembers ?? [])
+                DispatchQueue.main.async {
+                    self?.collectionView.deleteItems(at: [indexPath])
+                }
             }
-
-            // Remove local image if exists
-            if !member.imageURL.isEmpty {
-                try? FileManager.default.removeItem(atPath: member.imageURL)
-            }
-
-            // Remove from local storage and update UI
-            self?.familyMembers.remove(at: indexPath.row)
-            self?.dataProtocol.saveFamilyMembers(self?.familyMembers ?? [])
-            self?.collectionView.deleteItems(at: [indexPath])
         }
     }
 

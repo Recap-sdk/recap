@@ -8,10 +8,10 @@
 import UIKit
 
 class FamilyProfileViewController: UIViewController, UITableViewDelegate, UITableViewDataSource {
-
+    
     private let profileImageView: UIImageView = {
         let imageView = UIImageView()
-        imageView.image = UIImage(systemName: "person.circle.fill") // Placeholder image (grey)
+        imageView.image = UIImage(systemName: "person.circle.fill")
         imageView.contentMode = .scaleAspectFill
         imageView.clipsToBounds = true
         imageView.layer.borderWidth = 1
@@ -105,8 +105,8 @@ class FamilyProfileViewController: UIViewController, UITableViewDelegate, UITabl
 
             logoutButton.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: 20),
             logoutButton.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -20),
-            logoutButton.bottomAnchor.constraint(equalTo: view.safeAreaLayoutGuide.bottomAnchor, constant: -40), // Move further down
-            logoutButton.heightAnchor.constraint(equalToConstant: 50) // Fixed height for logout button
+            logoutButton.bottomAnchor.constraint(equalTo: view.safeAreaLayoutGuide.bottomAnchor, constant: -40),
+            logoutButton.heightAnchor.constraint(equalToConstant: 50),
         ])
 
         profileImageView.layer.cornerRadius = 60
@@ -135,7 +135,7 @@ class FamilyProfileViewController: UIViewController, UITableViewDelegate, UITabl
 
         let titles = ["Patients", "About App", "Language", "Privacy"]
         cell.textLabel?.text = titles[indexPath.row]
-        
+
         // Ensure white background color
         cell.backgroundColor = .white
 
@@ -162,10 +162,8 @@ class FamilyProfileViewController: UIViewController, UITableViewDelegate, UITabl
     }
 
     @objc private func logoutTapped() {
-        print("Logged out")
-        // Simulate logout and return to login screen
-        let loginVC = WelcomeViewController()
-        navigationController?.setViewControllers([loginVC], animated: true)
+        let familyLoginExtension = FamilyLoginViewController()
+        familyLoginExtension.logoutTapped()
     }
 }
 

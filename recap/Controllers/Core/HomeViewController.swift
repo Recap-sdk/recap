@@ -186,15 +186,20 @@ extension HomeViewController: UICollectionViewDelegate, UICollectionViewDataSour
 
     func collectionView(_ collectionView: UICollectionView, didSelectItemAt indexPath: IndexPath) {
         DispatchQueue.main.asyncAfter(deadline: .now()) {
-            if indexPath.item == 0 {
-                let questionsVC = DailyQuestionDetailViewController()
-                self.navigationController?.pushViewController(questionsVC, animated: true)
+            if let verifiedUserDocID = UserDefaults.standard.string(forKey: "verifiedUserDocID") {
+                if indexPath.item == 0 {
+                    let questionsVC = PatientQuestionsViewController(verifiedUserDocID: verifiedUserDocID)
+                    self.navigationController?.pushViewController(questionsVC, animated: true)
+                } else {
+                    let streaksVC = StreaksViewController(verifiedUserDocID: verifiedUserDocID)
+                    self.navigationController?.pushViewController(streaksVC, animated: true)
+                }
             } else {
-                let streaksVC = StreaksViewController()
-                self.navigationController?.pushViewController(streaksVC, animated: true)
+                print("Error: verifiedUserDocID not found in UserDefaults.")
             }
         }
     }
+
 }
 
 // MARK: - UITableViewDelegate and DataSource

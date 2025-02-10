@@ -13,14 +13,14 @@ class PatientsViewController: UIViewController, UITableViewDelegate, UITableView
     var prefetchedQuestions: [rapiMemory]?
 
     private let profileImageView: UIImageView = {
-        let imageView = UIImageView()
-        imageView.image = UIImage(named: "avatar") // Replace with your image name
-        imageView.contentMode = .scaleAspectFill
-        imageView.layer.cornerRadius = 50
-        imageView.clipsToBounds = true
-        imageView.translatesAutoresizingMaskIntoConstraints = false
-        return imageView
-    }()
+            let imageView = UIImageView()
+            imageView.image = UIImage(systemName: "person.circle.fill") // Replace with your image name
+            imageView.contentMode = .scaleAspectFill
+            imageView.layer.cornerRadius = 50
+            imageView.clipsToBounds = true
+            imageView.translatesAutoresizingMaskIntoConstraints = false
+            return imageView
+        }()
 
     private let nameLabel: UILabel = {
         let label = UILabel()

@@ -21,7 +21,7 @@ class StreakCardView: UIView {
     private let arrowImageView: UIImageView = {
         let imageView = UIImageView()
         imageView.image = UIImage(systemName: "chevron.right")
-        imageView.tintColor = .gray
+        imageView.tintColor = .black
         imageView.translatesAutoresizingMaskIntoConstraints = false
         return imageView
     }()
@@ -57,7 +57,7 @@ class StreakCardView: UIView {
     private func setupUI() {
         backgroundColor = .white
         layer.cornerRadius = 12
-        layer.shadowColor = UIColor.black.cgColor
+        layer.shadowColor = UIColor.systemOrange.cgColor
         layer.shadowOpacity = 0.1
         layer.shadowOffset = CGSize(width: 0, height: 2)
         layer.shadowRadius = 4
@@ -67,9 +67,9 @@ class StreakCardView: UIView {
         addSubview(separatorView)
         addSubview(statsStackView)
 
-        let maxStreakView = createStatView(title: "Max Streak", value: "9")
-        let currentStreakView = createStatView(title: "Current Streak", value: "5")
-        let activeDaysView = createStatView(title: "Active Days", value: "18")
+        let maxStreakView = createStatView(title: "Max Streak", value: "0")
+        let currentStreakView = createStatView(title: "Current Streak", value: "0")
+        let activeDaysView = createStatView(title: "Active Days", value: "0")
 
         statsStackView.addArrangedSubview(maxStreakView)
         statsStackView.addArrangedSubview(currentStreakView)
@@ -103,12 +103,12 @@ class StreakCardView: UIView {
         let titleLabel = UILabel()
         titleLabel.text = title
         titleLabel.font = UIFont.systemFont(ofSize: 16, weight: .semibold)
-        titleLabel.textColor = .gray
+        titleLabel.textColor = .black
 
         let valueLabel = UILabel()
         valueLabel.text = value
         valueLabel.font = UIFont.systemFont(ofSize: 25, weight: .bold) // Increased font size
-        valueLabel.textColor = .black
+        valueLabel.textColor = .systemOrange
 
         let stackView = UIStackView(arrangedSubviews: [valueLabel, titleLabel])
         stackView.axis = .vertical

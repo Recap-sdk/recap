@@ -4,13 +4,12 @@
 //
 //  Created by admin70 on 15/01/25.
 //
-
 import UIKit
 
 class StreakCardView: UIView {
 
     var onTap: (() -> Void)?
-    
+
     private let streaksLabel: UILabel = {
         let label = UILabel()
         label.text = "Streaks 🔥"
@@ -22,9 +21,16 @@ class StreakCardView: UIView {
     private let arrowImageView: UIImageView = {
         let imageView = UIImageView()
         imageView.image = UIImage(systemName: "chevron.right")
-        imageView.tintColor = .gray
+        imageView.tintColor = .black
         imageView.translatesAutoresizingMaskIntoConstraints = false
         return imageView
+    }()
+
+    private let separatorView: UIView = {
+        let view = UIView()
+        view.backgroundColor = .systemGray4
+        view.translatesAutoresizingMaskIntoConstraints = false
+        return view
     }()
 
     private let statsStackView: UIStackView = {
@@ -50,42 +56,44 @@ class StreakCardView: UIView {
 
     private func setupUI() {
         backgroundColor = .white
-        layer.cornerRadius = 16
-        layer.shadowColor = UIColor.black.cgColor
+        layer.cornerRadius = 12
+        layer.shadowColor = UIColor.systemOrange.cgColor
         layer.shadowOpacity = 0.1
         layer.shadowOffset = CGSize(width: 0, height: 2)
         layer.shadowRadius = 4
-        translatesAutoresizingMaskIntoConstraints = false
-
+        
         addSubview(streaksLabel)
         addSubview(arrowImageView)
+        addSubview(separatorView)
         addSubview(statsStackView)
 
-        let maxStreakView = createStatView(title: "Max Streak", value: "9")
-        let currentStreakView = createStatView(title: "Current Streak", value: "5")
-        let activeDaysView = createStatView(title: "Active Days", value: "18")
+        let maxStreakView = createStatView(title: "Max Streak", value: "0")
+        let currentStreakView = createStatView(title: "Current Streak", value: "0")
+        let activeDaysView = createStatView(title: "Active Days", value: "0")
 
         statsStackView.addArrangedSubview(maxStreakView)
         statsStackView.addArrangedSubview(currentStreakView)
         statsStackView.addArrangedSubview(activeDaysView)
 
         NSLayoutConstraint.activate([
-            // Streak Label Position
-            streaksLabel.topAnchor.constraint(equalTo: topAnchor, constant: 24),
+            streaksLabel.topAnchor.constraint(equalTo: topAnchor, constant: 16),
             streaksLabel.leadingAnchor.constraint(equalTo: leadingAnchor, constant: 16),
-            streaksLabel.trailingAnchor.constraint(lessThanOrEqualTo: arrowImageView.leadingAnchor, constant: -8),
-            
-            // Right Arrow (Same size as DailyQuestionCardView)
+
+            // Right Arrow
             arrowImageView.centerYAnchor.constraint(equalTo: streaksLabel.centerYAnchor),
             arrowImageView.trailingAnchor.constraint(equalTo: trailingAnchor, constant: -24),
             arrowImageView.widthAnchor.constraint(equalToConstant: 14),
             arrowImageView.heightAnchor.constraint(equalToConstant: 22),
 
-            // Stats Stack View
-            statsStackView.topAnchor.constraint(equalTo: streaksLabel.bottomAnchor, constant: 16),
+            separatorView.topAnchor.constraint(equalTo: streaksLabel.bottomAnchor, constant: 15),
+            separatorView.leadingAnchor.constraint(equalTo: leadingAnchor, constant: 20),
+            separatorView.trailingAnchor.constraint(equalTo: trailingAnchor, constant: -16),
+            separatorView.heightAnchor.constraint(equalToConstant: 1),
+
+            statsStackView.topAnchor.constraint(equalTo: separatorView.bottomAnchor, constant: 16),
             statsStackView.leadingAnchor.constraint(equalTo: leadingAnchor, constant: 16),
             statsStackView.trailingAnchor.constraint(equalTo: trailingAnchor, constant: -16),
-            statsStackView.heightAnchor.constraint(equalToConstant: 50),
+            statsStackView.heightAnchor.constraint(equalToConstant: 60),
             statsStackView.bottomAnchor.constraint(equalTo: bottomAnchor, constant: -16)
         ])
     }
@@ -95,12 +103,12 @@ class StreakCardView: UIView {
         let titleLabel = UILabel()
         titleLabel.text = title
         titleLabel.font = UIFont.systemFont(ofSize: 16, weight: .semibold)
-        titleLabel.textColor = .gray
+        titleLabel.textColor = .black
 
         let valueLabel = UILabel()
         valueLabel.text = value
-        valueLabel.font = UIFont.systemFont(ofSize: 20, weight: .bold)
-        valueLabel.textColor = .black
+        valueLabel.font = UIFont.systemFont(ofSize: 25, weight: .bold) // Increased font size
+        valueLabel.textColor = .systemOrange
 
         let stackView = UIStackView(arrangedSubviews: [valueLabel, titleLabel])
         stackView.axis = .vertical

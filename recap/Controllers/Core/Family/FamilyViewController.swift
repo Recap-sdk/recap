@@ -22,12 +22,15 @@ class FamilyViewController: UIViewController {
         button.addTarget(self, action: #selector(profileButtonTapped), for: .touchUpInside)
         return button
     }()
-  
+    let dailyQuestionsVC = DailyQuestionsViewController()
+
     override func viewDidLoad() {
         super.viewDidLoad()
         setupNavigationBar()
         setupUI()
         applyGradientBackground()
+        
+//        dailyQuestionsVC.addQuestionsToFirestore()
     }
     
     private func setupNavigationBar() {
@@ -48,16 +51,39 @@ class FamilyViewController: UIViewController {
         
         let dailyQuestionCard = DailyQuestionCardView()
         dailyQuestionCard.navigateToDetail = {
-            let detailVC = DailyQuestionDetailViewController()
-            self.navigationController?.pushViewController(detailVC, animated: true)
+            if let verifiedUserDocID = UserDefaults.standard.string(forKey: "verifiedUserDocID") {
+                let detailVC = DailyQuestionDetailViewController(verifiedUserDocID: verifiedUserDocID)
+                self.navigationController?.pushViewController(detailVC, animated: true)
+            } else {
+                print("Error: verifiedUserDocID not found in UserDefaults.")
+            }
         }
+
+//        let dailyQuestionCard = DailyQuestionCardView()
+//        dailyQuestionCard.navigateToDetail = {
+//            if let verifiedUserDocID = UserDefaults.standard.string(forKey: "verifiedUserDocID") {
+//                // Create an instance of PatientQuestionsViewController
+//                let patientQuestionsVC = PatientQuestionsViewController(verifiedUserDocID: verifiedUserDocID)
+//                
+//                // Navigate to the PatientQuestionsViewController
+//                self.navigationController?.pushViewController(patientQuestionsVC, animated: true)
+//            } else {
+//                print("Error: verifiedUserDocID not found in UserDefaults.")
+//            }
+//        }
+
        
         // Daily Question, Streak, and Trends Cards
         let streakCard = StreakCardView()
         streakCard.onTap = { [weak self] in
-            let streaksVC = StreaksViewController()
-            self?.navigationController?.pushViewController(streaksVC, animated: true)
+            if let verifiedUserDocID = UserDefaults.standard.string(forKey: "verifiedUserDocID") {
+                let streaksVC = StreaksViewController(verifiedUserDocID: verifiedUserDocID)
+                self?.navigationController?.pushViewController(streaksVC, animated: true)
+            } else {
+                print("Error: verifiedUserDocID not found in UserDefaults.")
+            }
         }
+
         
         let trendsCard = TrendsCardView()
         trendsCard.onInsightsTap = { [weak self] tag in
@@ -137,3 +163,5 @@ class FamilyViewController: UIViewController {
         present(navController, animated: true)
     }
 }
+#Preview
+{FamilyViewController()}

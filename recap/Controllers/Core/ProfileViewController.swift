@@ -8,18 +8,45 @@ import Foundation
 import SDWebImage
 import UIKit
 import FirebaseAuth
+import FirebaseFirestore
 
 class ProfileViewController: UIViewController {
     private var userDetails: [String: Any]?
     private let dataFetchManager: DataFetchProtocol = DataFetch()
+    
+    private var dataProtocol: FamilyStorageProtocol
+    
+    init(
+        storage: FamilyStorageProtocol = UserDefaultsStorageFamilyMember.shared
+    ) {
+        dataProtocol = storage
+        super.init(nibName: nil, bundle: nil)
+    }
+
+    required init?(coder: NSCoder) {
+        dataProtocol = UserDefaultsStorageFamilyMember.shared
+        super.init(coder: coder)
+    }
 
     private let profileImageView: UIImageView = {
         let imageView = UIImageView()
-        imageView.image = UIImage(named: "person.circle")
+        imageView.sd_setImage(
+            with: URL(string: "https://portfoliodata.djdiptayan.in/profile_pics/dj.png"),
+            placeholderImage: UIImage(named: "person.circle"),
+            options: [.retryFailed, .highPriority],
+            completed: { _, error, _, _ in
+                if error != nil {
+                    imageView.image = UIImage(named: "person.circle")
+                }
+            }
+        )
         imageView.contentMode = .scaleAspectFill
         imageView.layer.cornerRadius = 10
         imageView.clipsToBounds = true
+        imageView.widthAnchor.constraint(equalToConstant: 95).isActive = true
+        imageView.heightAnchor.constraint(equalToConstant: 95).isActive = true
         imageView.translatesAutoresizingMaskIntoConstraints = false
+
         return imageView
     }()
 
@@ -40,11 +67,11 @@ class ProfileViewController: UIViewController {
 
     override func viewDidLoad() {
         super.viewDidLoad()
+        loadUserProfile()
         view.backgroundColor = .systemBackground
         setupNavigationBar()
         setupUI()
         setupTableView()
-        loadUserProfile()
         prefetchQuestions()
     }
 
@@ -70,6 +97,11 @@ class ProfileViewController: UIViewController {
                 UserDefaultsStorageProfile.shared.saveProfile(details: profile, image: nil) { success in
                     if success {
                         self.updateUI(with: profile)
+                        self.dataFetchManager.fetchLastMemoryCheck(userId: userId) { [weak self] date in
+                            DispatchQueue.main.async {
+                                self?.updateMemoryCheckDate(date)
+                            }
+                        }
                     } else {
                         print("Failed to save profile locally.")
                     }
@@ -184,8 +216,9 @@ extension ProfileViewController: UITableViewDelegate, UITableViewDataSource {
                 "UID",
                 "Date of Birth",
                 "Sex",
-                "Age",
+//                "Age",
                 "Blood Type",
+                "Stage",
             ]
 //            let values: [String] = {
 //                if let details = dataProtocol.getProfile() {
@@ -209,11 +242,12 @@ extension ProfileViewController: UITableViewDelegate, UITableViewDataSource {
                         details["patientUID"] as? String ?? "Not Set",
                         details["dateOfBirth"] as? String ?? "Not Set",
                         details["sex"] as? String ?? "Not Set",
+//                        details["age"] as? String ?? "Not Set",
                         details["bloodGroup"] as? String ?? "Not Set",
                         details["stage"] as? String ?? "Not Set",
                     ]
                 }
-                return Array(repeating: "Not Set", count: 6)
+                return Array(repeating: "Not Set", count: 7)
             }()
             
             cell.textLabel?.text = titles[indexPath.row]
@@ -223,7 +257,7 @@ extension ProfileViewController: UITableViewDelegate, UITableViewDataSource {
             
         case 1:
             cell.textLabel?.text = "Memory Check"
-            cell.detailTextLabel?.text = "Last check: Today"
+            cell.detailTextLabel?.text = "Last check: Fetching"
             cell.imageView?.image = UIImage(systemName: "brain.head.profile")
             cell.imageView?.tintColor = .systemGreen
             cell.selectionStyle = .default
@@ -275,4 +309,12 @@ extension ProfileViewController: UITableViewDelegate, UITableViewDataSource {
         default: return nil
         }
     }
+
+    private func updateMemoryCheckDate(_ date: String) {
+        let indexPath = IndexPath(row: 0, section: 1)
+        if let cell = tableView.cellForRow(at: indexPath) {
+            cell.detailTextLabel?.text = "Last check: \(date)"
+        }
+    }
 }
+#Preview {ProfileViewController()}

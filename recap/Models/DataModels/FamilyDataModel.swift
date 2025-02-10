@@ -9,20 +9,12 @@ import Foundation
 import UIKit
 
 enum RelationshipCategory: String, Codable, CaseIterable {
-    case Son
-    case Daughter
-    case Husband
-    case Wife
-    case Father
-    case Mother
-    case Brother
-    case Sister
+    case Son, Daughter, Husband, Wife, Father, Mother, Brother, Sister
 }
 
 struct FamilyMember: Codable, Identifiable, Equatable {
-    var id = UUID()
+    var id: String  // Correct type declaration for `id`
     let name: String
-//    let relationship: RelationshipCategory
     let relationship: String
     let phone: String
     let email: String
@@ -30,9 +22,10 @@ struct FamilyMember: Codable, Identifiable, Equatable {
     let imageName: String
     let imageURL: String
 
+    // Convert FamilyMember to a dictionary (useful for Firebase)
     var dictionary: [String: Any] {
         return [
-            "id": id.uuidString, // Convert UUID to String for storage
+            "id": id,
             "name": name,
             "relationship": relationship,
             "phone": phone,
@@ -44,8 +37,10 @@ struct FamilyMember: Codable, Identifiable, Equatable {
     }
 }
 
+// Example data for family members (with valid IDs)
 var familyMembers = [
     FamilyMember(
+        id: UUID().uuidString,  // Generate a unique ID for each family member
         name: "Bobby Deol",
         relationship: "Brother",
         phone: "8208457322",
@@ -55,6 +50,7 @@ var familyMembers = [
         imageURL: "https://as1.ftcdn.net/v2/jpg/02/99/04/20/1000_F_299042079_vGBD7wIlSeNl7vOevWHiL93G4koMM967.jpg"
     ),
     FamilyMember(
+        id: UUID().uuidString,
         name: "Charlie Puth",
         relationship: "Son",
         phone: "8208457322",
@@ -64,6 +60,7 @@ var familyMembers = [
         imageURL: "https://as1.ftcdn.net/v2/jpg/02/99/04/20/1000_F_299042079_vGBD7wIlSeNl7vOevWHiL93G4koMM967.jpg"
     ),
     FamilyMember(
+        id: UUID().uuidString,
         name: "Jack Puth",
         relationship: "Husband",
         phone: "8208457322",
@@ -71,5 +68,5 @@ var familyMembers = [
         password: "password",
         imageName: "familyImg",
         imageURL: "https://as1.ftcdn.net/v2/jpg/02/99/04/20/1000_F_299042079_vGBD7wIlSeNl7vOevWHiL93G4koMM967.jpg"
-    ),
+    )
 ]

@@ -7,14 +7,8 @@ class ArticleTableViewController: UITableViewController {
 
     override func viewDidLoad() {
         super.viewDidLoad()
-
-        // Initialize Firestore
         db = Firestore.firestore()
-        
-        // Fetch articles from Firestore
         fetchArticles()
-
-        // Set up the view
  
         title = "Articles"
         

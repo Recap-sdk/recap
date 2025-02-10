@@ -85,23 +85,21 @@ class FamilyMemberDetailViewController: UIViewController {
 
     private func createProfileImageView() -> UIImageView {
         let imageView = UIImageView()
-        if let savedImage = UserDefaultsStorageFamilyMember.shared.getFamilyMemberImage(for: member.id) {
-               imageView.image = savedImage
-           } else {
-               imageView.image = UIImage(systemName: "person.circle.fill")
-           }
-//        imageView.image = UIImage(named: member.imageName)
-//        imageView
-//            .sd_setImage(
-//                with: URL(string: member.imageURL),
-//                placeholderImage: UIImage(named: "placeholder")
-//            )
         imageView.contentMode = .scaleAspectFill
-        imageView.layer.cornerRadius = 10
+        imageView.layer.cornerRadius = 75
         imageView.clipsToBounds = true
         imageView.translatesAutoresizingMaskIntoConstraints = false
         imageView.widthAnchor.constraint(equalToConstant: 150).isActive = true
         imageView.heightAnchor.constraint(equalToConstant: 150).isActive = true
+        // Load image from UserDefaults if available, otherwise fetch from URL using SDWebImage
+        if let savedImage = UserDefaultsStorageFamilyMember.shared.getFamilyMemberImage(for: member.id) {
+            imageView.image = savedImage
+        } else {
+            imageView.sd_setImage(
+                with: URL(string: member.imageURL),
+                placeholderImage: UIImage(systemName: "person.circle.fill")
+            )
+        }
         return imageView
     }
 

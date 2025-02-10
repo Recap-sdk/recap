@@ -83,36 +83,44 @@ class TrendsCardView: UIView {
             segmentedControl.leadingAnchor.constraint(equalTo: self.leadingAnchor, constant: 16),
             segmentedControl.trailingAnchor.constraint(equalTo: self.trailingAnchor, constant: -16),
 
-            immediateGraphView.topAnchor.constraint(equalTo: segmentedControl.bottomAnchor, constant: 16),
-            immediateGraphView.leadingAnchor.constraint(equalTo: self.leadingAnchor, constant: 16),
-            immediateGraphView.trailingAnchor.constraint(equalTo: self.trailingAnchor, constant: -16),
-            immediateGraphView.heightAnchor.constraint(equalTo: self.heightAnchor, multiplier: 0.5), // 50% of total height
+            immediateGraphView.topAnchor.constraint(equalTo: self.topAnchor, constant: 110),
+                immediateGraphView.leadingAnchor.constraint(equalTo: self.leadingAnchor, constant: 16),
+                immediateGraphView.trailingAnchor.constraint(equalTo: self.trailingAnchor, constant: -16),
+                immediateGraphView.heightAnchor.constraint(equalToConstant: 300),
+                immediateGraphView.bottomAnchor.constraint(equalTo: self.bottomAnchor, constant: -100),
 
-            immediateInsightsButton.topAnchor.constraint(equalTo: immediateGraphView.bottomAnchor, constant: 8),
-            immediateInsightsButton.leadingAnchor.constraint(equalTo: self.leadingAnchor, constant: 16),
-            immediateInsightsButton.trailingAnchor.constraint(equalTo: self.trailingAnchor, constant: -16),
-            immediateInsightsButton.heightAnchor.constraint(equalToConstant: 44), // Fixed button height
+                // Immediate Insights Button
+                immediateInsightsButton.topAnchor.constraint(equalTo: immediateGraphView.bottomAnchor, constant: 8),
+                immediateInsightsButton.leadingAnchor.constraint(equalTo: self.leadingAnchor, constant: 16),
+                immediateInsightsButton.trailingAnchor.constraint(equalTo: self.trailingAnchor, constant: -16),
+                immediateInsightsButton.heightAnchor.constraint(equalToConstant: 44),
 
-            recentGraphView.topAnchor.constraint(equalTo: segmentedControl.bottomAnchor, constant: 16),
-            recentGraphView.leadingAnchor.constraint(equalTo: self.leadingAnchor, constant: 16),
-            recentGraphView.trailingAnchor.constraint(equalTo: self.trailingAnchor, constant: -16),
-            recentGraphView.heightAnchor.constraint(equalTo: immediateGraphView.heightAnchor),
+                // Recent Graph View (Updated to match Immediate Graph View)
+                recentGraphView.topAnchor.constraint(equalTo: self.topAnchor, constant: 110),
+                recentGraphView.leadingAnchor.constraint(equalTo: self.leadingAnchor, constant: 16),
+                recentGraphView.trailingAnchor.constraint(equalTo: self.trailingAnchor, constant: -16),
+                recentGraphView.heightAnchor.constraint(equalToConstant: 300),
+                recentGraphView.bottomAnchor.constraint(equalTo: self.bottomAnchor, constant: -100),
 
-            recentInsightsButton.topAnchor.constraint(equalTo: recentGraphView.bottomAnchor, constant: 8),
-            recentInsightsButton.leadingAnchor.constraint(equalTo: self.leadingAnchor, constant: 16),
-            recentInsightsButton.trailingAnchor.constraint(equalTo: self.trailingAnchor, constant: -16),
-            recentInsightsButton.heightAnchor.constraint(equalTo: immediateInsightsButton.heightAnchor),
+                // Recent Insights Button
+                recentInsightsButton.topAnchor.constraint(equalTo: recentGraphView.bottomAnchor, constant: 8),
+                recentInsightsButton.leadingAnchor.constraint(equalTo: self.leadingAnchor, constant: 16),
+                recentInsightsButton.trailingAnchor.constraint(equalTo: self.trailingAnchor, constant: -16),
+                recentInsightsButton.heightAnchor.constraint(equalTo: immediateInsightsButton.heightAnchor),
 
-            remoteGraphView.topAnchor.constraint(equalTo: segmentedControl.bottomAnchor, constant: 16),
-            remoteGraphView.leadingAnchor.constraint(equalTo: self.leadingAnchor, constant: 16),
-            remoteGraphView.trailingAnchor.constraint(equalTo: self.trailingAnchor, constant: -16),
-            remoteGraphView.heightAnchor.constraint(equalTo: immediateGraphView.heightAnchor),
+                // Remote Graph View (Updated to match Immediate Graph View)
+                remoteGraphView.topAnchor.constraint(equalTo: self.topAnchor, constant: 110),
+                remoteGraphView.leadingAnchor.constraint(equalTo: self.leadingAnchor, constant: 16),
+                remoteGraphView.trailingAnchor.constraint(equalTo: self.trailingAnchor, constant: -16),
+                remoteGraphView.heightAnchor.constraint(equalToConstant: 300),
+                remoteGraphView.bottomAnchor.constraint(equalTo: self.bottomAnchor, constant: -100),
 
-            remoteInsightsButton.topAnchor.constraint(equalTo: remoteGraphView.bottomAnchor, constant: 8),
-            remoteInsightsButton.leadingAnchor.constraint(equalTo: self.leadingAnchor, constant: 16),
-            remoteInsightsButton.trailingAnchor.constraint(equalTo: self.trailingAnchor, constant: -16),
-            remoteInsightsButton.heightAnchor.constraint(equalTo: immediateInsightsButton.heightAnchor),
-        ])
+                // Remote Insights Button
+                remoteInsightsButton.topAnchor.constraint(equalTo: remoteGraphView.bottomAnchor, constant: 8),
+                remoteInsightsButton.leadingAnchor.constraint(equalTo: self.leadingAnchor, constant: 16),
+                remoteInsightsButton.trailingAnchor.constraint(equalTo: self.trailingAnchor, constant: -16),
+                remoteInsightsButton.heightAnchor.constraint(equalTo: immediateInsightsButton.heightAnchor)
+            ])
     }
 
     private func setupInsightsButton(_ button: UIButton, title: String, tag: Int) {

@@ -1,5 +1,6 @@
 import UIKit
 import Firebase
+import FirebaseAuth
 
 class MemoryCheckViewController: UIViewController {
     
@@ -168,6 +169,23 @@ class MemoryCheckViewController: UIViewController {
     private func showResults() {
         let assessment = RapidMemoryQuiz.evaluateMemory(answers: userAnswers, questions: questions)
         
+        let reportId = generateReportId()
+
+        // Prepare the report data
+        let reportData: [String: Any] = [
+            "date": Timestamp(date: Date()),
+            "totalScore": assessment.totalScore,
+            "totalQuestions": assessment.totalQuestions,
+            "status": assessment.status,
+            "typeScores": typeScoresToFirestoreFormat(assessment.typeScores),
+            "overallPercentage": assessment.overallPercentage,
+            "recommendations": assessment.recommendations
+        ]
+
+        // Upload the report to Firebase
+        DataUploadManager().uploadMemoryCheckReport(userId: Auth.auth().currentUser?.uid ?? "", reportId: reportId, data: reportData)
+        
+        // Display the results to the user
         var message = "Overall Score: \(assessment.totalScore) out of \(assessment.totalQuestions)\n\n"
         message += "Memory Type Breakdown:\n"
         
@@ -191,6 +209,24 @@ class MemoryCheckViewController: UIViewController {
         })
         
         present(alertController, animated: true)
+    }
+
+    // Convert typeScores to Firestore-friendly format
+    private func typeScoresToFirestoreFormat(_ typeScores: [MemoryType: (correct: Int, total: Int)]) -> [[String: Any]] {
+        return typeScores.map { (memoryType, score) in
+            return [
+                "memoryType": memoryType.rawValue,
+                "correct": score.correct,
+                "total": score.total
+            ]
+        }
+    }
+
+    // Generate the report ID using the current date in the format YYYY-MM-DD
+    private func generateReportId() -> String {
+        let formatter = DateFormatter()
+        formatter.dateFormat = "yyyy-MM-dd"
+        return formatter.string(from: Date())
     }
 }
 

@@ -44,7 +44,7 @@ extension PatientLoginViewController {
                     UserDefaultsStorageProfile.shared.saveProfile(details: userDetails.dictionary, image: nil) { [weak loginVC] success in
                         if success {
                             // Fetch family members
-                            FirebaseManager.shared.fetchFamilyMembers(for: userId) { familyMembers, error in
+                            FirebaseManager.shared.fetchFamilyMembers(for: userId) { familyMembers, _ in
                                 if let familyMembers = familyMembers {
                                     // Handle family members as needed
                                 }
@@ -157,7 +157,7 @@ extension PatientLoginViewController {
                         "stage": "",
                         "profileImageURL": "",
                         "familyMembers": [],
-                        "type": "patient"
+                        "type": "patient",
                     ]
 
                     // Save the initial user profile to Firestore
@@ -176,7 +176,7 @@ extension PatientLoginViewController {
             }
         }
     }
-    
+
     private func fetchUserProfileAndNavigate(userId: String) {
         let db = Firestore.firestore()
 
@@ -219,7 +219,14 @@ extension PatientLoginViewController {
             GIDSignIn.sharedInstance.signOut()
 
             // Clear user session and local storage
-            UserDefaults.standard.removeObject(forKey: "hasCompletedProfile")
+            UserDefaults.standard
+                .removeObject(
+                    forKey: Constants.UserDefaultsKeys.hasPatientCompletedProfile
+                )
+            UserDefaults.standard
+                .removeObject(
+                    forKey: Constants.UserDefaultsKeys.isPatientLoggedIn
+                )
             UserDefaultsStorageProfile.shared.clearProfile()
 
             // Animate the swipe down effect

@@ -8,6 +8,12 @@
 import UIKit
 
 extension StreaksViewController {
+    func formattedYearMonth() -> String {
+        let yearMonthFormatter = DateFormatter()
+        yearMonthFormatter.dateFormat = "yyyy-MM"
+        let date = Calendar.current.date(from: DateComponents(year: currentYear, month: currentMonth))!
+        return yearMonthFormatter.string(from: date)
+    }
     
     // MARK: - Format Month and Year
     func formattedMonthYear() -> String {

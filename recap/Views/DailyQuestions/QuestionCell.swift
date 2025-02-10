@@ -115,15 +115,24 @@ class QuestionCell: UITableViewCell {
     
     func configure(with question: Question) {
         titleLabel.text = question.text
-        
-        // Set the icon and its color based on whether the question is answered
-        iconImageView.image = UIImage(
-            systemName: question.isAnswered ? "checkmark.circle.fill" : "checkmark.circle"
-        )
-        iconImageView.tintColor = question.isAnswered ? .systemGreen : .systemGray
-        
+
+        // Debugging: Print isAnswered state
+        print("Question: \(question.text), isAnswered: \(question.isAnswered)")
+
+        // Change the color to blue instead of green
+        let iconName = question.isAnswered ? "checkmark.circle.fill" : "checkmark.circle"
+        let iconColor = question.isAnswered ? UIColor.systemGreen : UIColor.systemGray  // ✅ Changed to systemBlue
+
+        DispatchQueue.main.async {
+            self.iconImageView.image = UIImage(systemName: iconName)
+            self.iconImageView.tintColor = iconColor
+        }
+
         // Display options or image description
         let optionsText = question.answerOptions.joined(separator: ", ")
         descriptionLabel.text = optionsText.isEmpty ? "No options provided" : optionsText
     }
+
+
 }
+#Preview{QuestionCell()}

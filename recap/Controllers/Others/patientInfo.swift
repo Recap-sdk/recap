@@ -1,6 +1,7 @@
 import FirebaseAuth
 import UIKit
 import FirebaseFirestore
+import GoogleSignIn
 
 class patientInfo: UIViewController {
     weak var delegate: PatientInfoDelegate?
@@ -77,6 +78,23 @@ class patientInfo: UIViewController {
         setupImagePicker()
         setupPickers()
         setupTextFields()
+        
+        if let user = GIDSignIn.sharedInstance.currentUser,
+              let imageURL = user.profile?.imageURL(withDimension: 200) {
+               downloadImage(from: imageURL)
+           }
+    }
+    
+    private func downloadImage(from url: URL) {
+        URLSession.shared.dataTask(with: url) { [weak self] data, response, error in
+            guard let self = self, error == nil, let data = data, let image = UIImage(data: data) else {
+                print("Failed to download image: \(error?.localizedDescription ?? "Unknown error")")
+                return
+            }
+            DispatchQueue.main.async {
+                self.profileImageView.image = image
+            }
+        }.resume()
     }
 
     // MARK: - Setup
@@ -221,6 +239,8 @@ class patientInfo: UIViewController {
             showAlert(message: "User not logged in.")
             return
         }
+        
+        let profileImageURL = GIDSignIn.sharedInstance.currentUser?.profile?.imageURL(withDimension: 200)?.absoluteString ?? ""
 
         let updatedData: [String: Any] = [
             "firstName": firstName,
@@ -228,7 +248,8 @@ class patientInfo: UIViewController {
             "dateOfBirth": dob,
             "sex": sex,
             "bloodGroup": bloodGroup,
-            "stage": stage
+            "stage": stage,
+            "profileImageURL": profileImageURL
         ]
 
         let db = Firestore.firestore()

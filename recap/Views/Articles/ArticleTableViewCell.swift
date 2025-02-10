@@ -85,6 +85,6 @@ class ArticleTableViewCell: UITableViewCell {
     func configure(with article: Article) {
         articleImageView.image = article.image
         titleLabel.text = article.title
-        subtitleLabel.text = String(article.content.prefix(100)) // Convert PrefixSequence to String
+        subtitleLabel.text = String(article.content.prefix(100))
     }
 }

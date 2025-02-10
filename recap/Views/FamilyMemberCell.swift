@@ -11,7 +11,7 @@ import UIKit
 class FamilyMemberCell: UICollectionViewCell {
     static let identifier = "FamilyMemberCell"
 
-    private let imageView: UIImageView = {
+    private let profileImageView: UIImageView = {
         let imageView = UIImageView()
         imageView.contentMode = .scaleAspectFill
         imageView.layer.cornerRadius = 8
@@ -73,7 +73,7 @@ class FamilyMemberCell: UICollectionViewCell {
         contentView.backgroundColor = .white
 
         // Add subviews
-        contentView.addSubview(imageView)
+        contentView.addSubview(profileImageView)
         contentView.addSubview(nameLabel)
         contentView.addSubview(relationshipLabel)
         contentView.addSubview(phoneLabel)
@@ -81,9 +81,9 @@ class FamilyMemberCell: UICollectionViewCell {
         contentView.addSubview(dividerLine)
 
         // Layout the subviews with the specified dimensions
-        imageView.frame = CGRect(x: (contentView.frame.size.width - 90) / 2, y: 10, width: 100, height: 100)
+        profileImageView.frame = CGRect(x: (contentView.frame.size.width - 90) / 2, y: 10, width: 100, height: 100)
 
-        dividerLine.frame = CGRect(x: 10, y: imageView.frame.maxY + 10, width: contentView.frame.size.width - 20, height: 1)
+        dividerLine.frame = CGRect(x: 10, y: profileImageView.frame.maxY + 10, width: contentView.frame.size.width - 20, height: 1)
 
         nameLabel.frame = CGRect(x: 10, y: dividerLine.frame.maxY + 8, width: contentView.frame.size.width - 40, height: 20)
 
@@ -106,16 +106,14 @@ class FamilyMemberCell: UICollectionViewCell {
 //        phoneLabel.text = familyMember.phone
 //    }
 
-    func configure(with familyMember: FamilyMember) {
-        nameLabel.text = familyMember.name
-        relationshipLabel.text = familyMember.relationship
-        phoneLabel.text = familyMember.phone
-
-        if let savedImage = UIImage(contentsOfFile: familyMember.imageURL), !familyMember.imageURL.isEmpty {
-            imageView.image = savedImage
-        } else {
-            imageView.image = UIImage(systemName: "person.circle.fill")
-        }
+    func configure(with member: FamilyMember) {
+        nameLabel.text = member.name
+        relationshipLabel.text = member.relationship
+        profileImageView.sd_setImage(
+            with: URL(string: member.imageURL),
+            placeholderImage: UIImage(systemName: "person.circle.fill"),
+            options: .refreshCached
+        )
     }
 }
 

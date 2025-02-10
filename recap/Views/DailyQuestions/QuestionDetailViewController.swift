@@ -8,9 +8,19 @@ protocol QuestionDetailDelegate: AnyObject {
 class QuestionDetailViewController: UIViewController {
 
     weak var delegate: QuestionDetailDelegate?
-    var question: Question?  // The question object passed from previous view
+    var question: Question?
     var selectedOptionButton: UIButton?
+    var verifiedUserDocID: String
     
+    init(verifiedUserDocID: String) {
+        self.verifiedUserDocID = verifiedUserDocID
+        super.init(nibName: nil, bundle: nil)
+    }
+
+    required init?(coder: NSCoder) {
+        fatalError("init(coder:) has not been implemented")
+    }
+
     // Firestore reference
     private let db = Firestore.firestore()
 
@@ -197,30 +207,50 @@ class QuestionDetailViewController: UIViewController {
         sender.backgroundColor = UIColor(red: 0.9, green: 0.95, blue: 1.0, alpha: 1.0)
     }
 
-    // MARK: - Submit Button Tapped
     @objc private func submitButtonTapped() {
-        guard let selectedOptionButton = selectedOptionButton else { return }
+
+        guard let selectedOptionButton = selectedOptionButton, var question = question else { return }
+
+        let selectedAnswer = selectedOptionButton.title(for: .normal) ?? ""
+
+        // Mark the question as answered
+        question.isAnswered = true
 
         // Update button state
         submitButton.backgroundColor = .systemGreen
         submitButton.setTitle("Submitted", for: .normal)
 
-        // Mark the question as answered and notify the delegate
-        if var question = question {
-            question.isAnswered = true
-            delegate?.didSubmitAnswer(for: question)
+        // Notify delegate that the answer was submitted
+        delegate?.didSubmitAnswer(for: question)
 
-            // Optionally, update Firestore here to mark the question as answered
-            db.collection("questions").document(question.id ?? "<#default value#>").updateData([
-                "isAnswered": true
-            ]) { (error) in
-                if let error = error {
-                    print("Error updating question: \(error.localizedDescription)")
-                } else {
-                    print("Question successfully updated")
-                }
+        // Update Firestore (Original CODE1 Firestore Update)
+        db.collection("questions").document(question.id ?? "<#default value#>").updateData([
+            "isAnswered": true
+        ]) { (error) in
+            if let error = error {
+                print("Error updating question: \(error.localizedDescription)")
+            } else {
+                print("Question successfully updated")
+            }
+        }
+
+        let questionsFetcher = QuestionsManager(verifiedUserDocID: verifiedUserDocID)
+
+        let userQuestionRef = db.collection("users")
+            .document(questionsFetcher.verifiedUserDocID)
+            .collection("questions")
+            .document(question.id ?? "")
+
+        userQuestionRef.setData([
+            "correctAnswers": [selectedAnswer],
+            "isAnswered": true // Update the isAnswered field in Firestore
+        ], merge: true) { error in
+            if let error = error {
+                print("Error updating correct answer: \(error.localizedDescription)")
+            } else {
+                print("Correct answer successfully saved in Firestore.")
             }
         }
     }
+
 }
-#Preview{ QuestionDetailViewController() }

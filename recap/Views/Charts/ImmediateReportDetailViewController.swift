@@ -86,14 +86,14 @@ struct DonutChartView: View {
             if correctFraction > 0 {
                 Circle()
                     .trim(from: 0, to: correctFraction)
-                    .stroke(AngularGradient(gradient: Gradient(colors: [Color.customLightPurple]), center: .center), lineWidth: 20)
+                    .stroke(AngularGradient(gradient: Gradient(colors: [Color.customLightPurple]), center: .center), lineWidth: 40)
                     .rotationEffect(.degrees(-90))
             }
 
             if incorrectFraction > 0 {
                 Circle()
                     .trim(from: correctFraction, to: correctFraction + incorrectFraction)
-                    .stroke(AngularGradient(gradient: Gradient(colors: [Color.customLightRed]), center: .center), lineWidth: 20)
+                    .stroke(AngularGradient(gradient: Gradient(colors: [Color.customLightRed]), center: .center), lineWidth: 40)
                     .rotationEffect(.degrees(-90))
             }
 
@@ -125,3 +125,4 @@ struct ImmediateReportDetailViewController_Previews: PreviewProvider {
         ImmediateReportDetailViewController()
     }
 }
+

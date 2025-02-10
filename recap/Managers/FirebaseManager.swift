@@ -44,6 +44,50 @@ class FirebaseManager {
 //            completion(error)
 //        }
 //    }
+    func uploadFamilyMemberImage(patientId: String, imagePath: String, image: UIImage, completion: @escaping (String?, Error?) -> Void) {
+        let storageRef = storage.child(imagePath)
+
+        guard let imageData = image.jpegData(compressionQuality: 0.8) else {
+            completion(nil, NSError(domain: "ImageError", code: 500, userInfo: [NSLocalizedDescriptionKey: "Failed to convert image to data."]))
+            return
+        }
+
+        // Upload image to Firebase Storage
+        storageRef.putData(imageData, metadata: nil) { metadata, error in
+            if let error = error {
+                completion(nil, error)
+                return
+            }
+
+            // Get download URL
+            storageRef.downloadURL { url, error in
+                if let error = error {
+                    completion(nil, error)
+                } else {
+                    guard let imageUrl = url?.absoluteString else {
+                        completion(nil, NSError(domain: "ImageError", code: 500, userInfo: [NSLocalizedDescriptionKey: "Invalid URL"]))
+                        return
+                    }
+                    completion(imageUrl, nil)  // Return image URL immediately
+
+                    // Trigger Firestore update after image upload
+                    let firestoreRef = self.firestore.collection(Constants.FirestoreKeys.usersCollection)
+                        .document(patientId)
+                        .collection(Constants.FirestoreKeys.familyMembersCollection)
+                        .document(imagePath)
+
+                    firestoreRef.updateData(["imageURL": imageUrl]) { error in
+                        if let error = error {
+                            print("Failed to update Firestore document with image URL: \(error)")
+                        } else {
+                            print("Firestore document updated successfully with image URL")
+                        }
+                    }
+                }
+            }
+        }
+    }
+    
     func saveUserDetails(_ details: UserDetails, completion: @escaping (Error?) -> Void) {
         let userId = details.id
         let userData: [String: Any] = [
@@ -55,20 +99,21 @@ class FirebaseManager {
             "sex": details.sex,
             "bloodGroup": details.bloodGroup,
             "stage": details.stage,
-            "profileImageURL": details.profileImageURL ?? ""
+            "profileImageURL": details.profileImageURL ?? "",
         ]
-        
+
         firestore.collection("users").document(userId).setData(userData) { error in
             completion(error)
         }
     }
-    
+
 //    func addFamilyMember(for patientId: String, member: FamilyMember, completion: @escaping (Error?) -> Void) {
 //        let familyMemberData = member.dictionary
 //        firestore.collection("users").document(patientId).collection("familyMembers").addDocument(data: familyMemberData) { error in
 //            completion(error)
 //        }
 //    }
+
     func addFamilyMember(for patientId: String, member: FamilyMember, completion: @escaping (Error?) -> Void) {
         let familyMemberData: [String: Any] = [
             "name": member.name,
@@ -77,11 +122,16 @@ class FirebaseManager {
             "relationship": member.relationship,
             "phone": member.phone,
             "linkedPatientId": patientId, // Link the family member to the patient
+            "imageName": member.imageName,
+            "imageURL": member.imageURL,
         ]
-
-        firestore.collection("users").document(patientId).collection("family_members").addDocument(data: familyMemberData) { error in
-            completion(error)
-        }
+        firestore
+            .collection(Constants.FirestoreKeys.usersCollection)
+            .document(patientId)
+            .collection(Constants.FirestoreKeys.familyMembersCollection)
+            .addDocument(data: familyMemberData) { error in
+                completion(error)
+            }
     }
 
     func fetchUserDetails(userId: String, completion: @escaping (UserDetails?, Error?) -> Void) {
@@ -101,6 +151,7 @@ class FirebaseManager {
             completion(userDetails, nil)
         }
     }
+
     func fetchUserProfile(userId: String, completion: @escaping ([String: Any]?) -> Void) {
         firestore.collection("users").document(userId).getDocument { document, error in
             if let error = error {
@@ -117,37 +168,53 @@ class FirebaseManager {
             completion(data)
         }
     }
-    func deleteFamilyMember(for patientId: String, memberId: String, completion: @escaping (Error?) -> Void) {
-           firestore.collection("users").document(patientId).collection("family_members").document(memberId).delete { error in
-               completion(error)
-           }
-       }
-    func fetchFamilyMembers(for patientId: String, completion: @escaping ([FamilyMember]?, Error?) -> Void) {
-        firestore.collection("users").document(patientId).collection("family_members").getDocuments { snapshot, error in
-            if let error = error {
-                completion(nil, error)
-                return
-            }
 
-            let familyMembers = snapshot?.documents.compactMap { doc -> FamilyMember? in
-                let data = doc.data()
-                
-                // Use non-UUID strings directly for IDs if needed
-                let familyId = UUID(uuidString: doc.documentID) ?? UUID()
-                
-                return FamilyMember(
-                    id: familyId,  // Use UUID, or fallback to generate one if invalid
-                    name: data["name"] as? String ?? "Unknown",
-                    relationship: data["relationship"] as? String ?? "Unknown",
-                    phone: data["phone"] as? String ?? "Unknown",
-                    email: data["email"] as? String ?? "Unknown",
-                    password: data["password"] as? String ?? "",
-                    imageName: data["imageName"] as? String ?? "",
-                    imageURL: data["imageURL"] as? String ?? ""
-                )
-            } ?? []
-            
-            completion(familyMembers, nil)
+    func deleteFamilyMember(for patientId: String, memberId: String, completion: @escaping (Error?) -> Void) {
+        firestore
+            .collection(Constants.FirestoreKeys.usersCollection)
+            .document(patientId)
+            .collection(Constants.FirestoreKeys.familyMembersCollection)
+            .document(memberId)
+            .delete { error in
+                if let error = error {
+                    print("Error deleting family member from Firebase: \(error.localizedDescription)")
+                } else {
+                    print("Successfully deleted family member \(memberId)")
+                }
+                completion(error)
+            }
+    }
+
+    func fetchFamilyMembers(for patientId: String, completion: @escaping ([FamilyMember]?, Error?) -> Void) {
+        firestore
+            .collection(Constants.FirestoreKeys.usersCollection)
+            .document(patientId)
+            .collection(Constants.FirestoreKeys.familyMembersCollection)
+            .getDocuments { snapshot, error in
+                if let error = error {
+                    completion(nil, error)
+                    return
+                }
+                let familyMembers = snapshot?.documents.compactMap { doc -> FamilyMember? in
+                    let data = doc.data()
+                    return FamilyMember(
+                        id: doc.documentID, // Use the actual Firestore document ID
+                        name: data["name"] as? String ?? "",
+                        relationship: data["relationship"] as? String ?? "",
+                        phone: data["phone"] as? String ?? "",
+                        email: data["email"] as? String ?? "",
+                        password: data["password"] as? String ?? "",
+                        imageName: data["imageName"] as? String ?? "",
+                        imageURL: data["imageURL"] as? String ?? ""
+                    )
+                }
+                completion(familyMembers, nil)
+            }
+    }
+
+    func uploadDocument(collectionPath: String, documentId: String, data: [String: Any], completion: @escaping (Error?) -> Void) {
+        firestore.collection(collectionPath).document(documentId).setData(data) { error in
+            completion(error)
         }
     }
 }

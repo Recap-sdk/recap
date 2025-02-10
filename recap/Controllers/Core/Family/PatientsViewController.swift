@@ -13,14 +13,14 @@ class PatientsViewController: UIViewController, UITableViewDelegate, UITableView
     var prefetchedQuestions: [rapiMemory]?
 
     private let profileImageView: UIImageView = {
-        let imageView = UIImageView()
-        imageView.image = UIImage(named: "avatar") // Replace with your image name
-        imageView.contentMode = .scaleAspectFill
-        imageView.layer.cornerRadius = 50
-        imageView.clipsToBounds = true
-        imageView.translatesAutoresizingMaskIntoConstraints = false
-        return imageView
-    }()
+            let imageView = UIImageView()
+            imageView.image = UIImage(systemName: "person.circle.fill") // Replace with your image name
+            imageView.contentMode = .scaleAspectFill
+            imageView.layer.cornerRadius = 50
+            imageView.clipsToBounds = true
+            imageView.translatesAutoresizingMaskIntoConstraints = false
+            return imageView
+        }()
 
     private let nameLabel: UILabel = {
         let label = UILabel()
@@ -46,15 +46,37 @@ class PatientsViewController: UIViewController, UITableViewDelegate, UITableView
         setupNavigationBar()
         setupUI()
         setupTableView()
+        
+        // Fetch patient details from UserDefaults
+        if let savedUserData = UserDefaults.standard.object(forKey: "patientDetails") as? [String: Any] {
+            userDetails = savedUserData
+        }
+        
         updateUIWithData()
     }
 
     private func updateUIWithData() {
-        // Update UI using passed data
         if let userDetails = userDetails {
             nameLabel.text = "\(userDetails["firstName"] as? String ?? "") \(userDetails["lastName"] as? String ?? "")"
+
+            if let profileImageURL = userDetails["profileImageURL"] as? String, !profileImageURL.isEmpty {
+                if let url = URL(string: profileImageURL) {
+                    // Load the image asynchronously
+                    DispatchQueue.global().async {
+                        if let data = try? Data(contentsOf: url) {
+                            DispatchQueue.main.async {
+                                self.profileImageView.image = UIImage(data: data)
+                            }
+                        }
+                    }
+                }
+            }
+            
+            tableView.reloadData()
         }
     }
+
+    
 
     private func setupNavigationBar() {
         let doneButton = UIBarButtonItem(

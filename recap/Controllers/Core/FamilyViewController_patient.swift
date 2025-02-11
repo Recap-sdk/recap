@@ -1,6 +1,6 @@
 
 //
-//  FamilyViewController.swift
+//  FamilyViewController_Patient.swift
 //  recap
 //
 //  Created by Diptayan Jash on 05/11/24.
@@ -39,19 +39,18 @@ class FamilyViewController_patient: UIViewController, UICollectionViewDelegate, 
         }
 
         setupUI()
-        loadFamilyMembers()
+        loadFamilyMembersFromCache()
+//        fetchFamilyMembersFromFirestore()
+        setupRealTimeFamilyMemberUpdates()
         setupNotifications()
     }
 
-    private func loadFamilyMembers() {
-        // Load cached family members from local storage
+    private func loadFamilyMembersFromCache() {
         familyMembers = dataProtocol.getFamilyMembers()
+        collectionView.reloadData()
+    }
 
-        DispatchQueue.main.async { [weak self] in
-            self?.collectionView.reloadData()
-        }
-
-        // Fetch updated family members from Firestore
+    private func fetchFamilyMembersFromFirestore() {
         guard let patientId = Auth.auth().currentUser?.uid else {
             print("Patient not logged in.")
             return
@@ -64,10 +63,57 @@ class FamilyViewController_patient: UIViewController, UICollectionViewDelegate, 
                 print("Error fetching family members: \(error.localizedDescription)")
             } else if let members = members {
                 self.familyMembers = members
-                self.dataProtocol.saveFamilyMembers(members) // Bulk save family members
+                self.dataProtocol.saveFamilyMembers(members) // Save updated members locally
                 DispatchQueue.main.async {
-                    self.collectionView.reloadData()
+                    self.collectionView.reloadData() // Sync UI
                 }
+            }
+        }
+    }
+    private func setupRealTimeFamilyMemberUpdates() {
+        guard let patientId = Auth.auth().currentUser?.uid else {
+            print("Patient not logged in.")
+            return
+        }
+
+        // Set up a real-time listener
+        let familyMemberCollection = FirebaseManager.shared.firestore
+            .collection(Constants.FirestoreKeys.usersCollection)
+            .document(patientId)
+            .collection(Constants.FirestoreKeys.familyMembersCollection)
+
+        familyMemberCollection.addSnapshotListener { [weak self] snapshot, error in
+            guard let self = self else { return }
+
+            if let error = error {
+                print("Error listening to changes: \(error.localizedDescription)")
+                return
+            }
+
+            guard let documents = snapshot?.documents else {
+                print("No documents found.")
+                return
+            }
+
+            self.familyMembers = documents.compactMap { doc -> FamilyMember? in
+                let data = doc.data()
+                return FamilyMember(
+                    id: doc.documentID,
+                    name: data["name"] as? String ?? "",
+                    relationship: data["relationship"] as? String ?? "",
+                    phone: data["phone"] as? String ?? "",
+                    email: data["email"] as? String ?? "",
+                    password: data["password"] as? String ?? "",
+                    imageName: data["imageName"] as? String ?? "",
+                    imageURL: data["imageURL"] as? String ?? ""
+                )
+            }
+
+            // Save the updated members in cache
+            self.dataProtocol.saveFamilyMembers(self.familyMembers)
+
+            DispatchQueue.main.async {
+                self.collectionView.reloadData() // Update UI immediately
             }
         }
     }
@@ -117,7 +163,8 @@ class FamilyViewController_patient: UIViewController, UICollectionViewDelegate, 
 
     @objc private func handleFamilyMemberAdded() {
         print("Handling family member added...")
-        loadFamilyMembers()
+        loadFamilyMembersFromCache()  // Load instantly after adding a family member
+        fetchFamilyMembersFromFirestore()  // Sync in background
     }
 
     private func GradientBackground() {
@@ -239,10 +286,10 @@ class FamilyViewController_patient: UIViewController, UICollectionViewDelegate, 
 
     override func viewWillAppear(_ animated: Bool) {
         super.viewWillAppear(animated)
-        loadFamilyMembers()
+//        loadFamilyMembers()
     }
 }
 
-#Preview{
+#Preview {
     FamilyViewController_patient()
 }

@@ -3,7 +3,7 @@ import FirebaseFirestore
 
 class ArticleTableViewController: UITableViewController {
     var db: Firestore!
-    var articles = [Article]()  // This is the array to store fetched articles
+    var articles = [Article]()
 
     override func viewDidLoad() {
         super.viewDidLoad()

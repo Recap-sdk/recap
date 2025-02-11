@@ -15,7 +15,9 @@ class StreakService {
     
     private let db = Firestore.firestore()
     private var verifiedUserDocID: String
-
+    
+    var streakDataFetched: ((Int, Int, Int) -> Void)?
+    
     init(verifiedUserDocID: String) {
         self.verifiedUserDocID = verifiedUserDocID
         print("✅ StreakService initialized with User Doc ID: \(verifiedUserDocID)")
@@ -141,4 +143,222 @@ class StreakService {
         return dateFormatter.string(from: Date())
 //        return "2025-02"
     }
+    
+    func fetchAndPrintStreakData() {
+           let coreRef = db.collection("users").document(verifiedUserDocID).collection("streaksCore")
+
+           coreRef.getDocuments { querySnapshot, error in
+               if let error = error {
+                   print("Error fetching streak data: \(error.localizedDescription)")
+                   return
+               }
+
+               if let querySnapshot = querySnapshot, !querySnapshot.isEmpty {
+                   for document in querySnapshot.documents {
+                       let data = document.data()
+
+                       let maxStreak = data["maxStreak"] as? Int ?? 0
+                       let currentStreak = data["currentStreak"] as? Int ?? 0
+                       let activeDays = data["activeDays"] as? Int ?? 0
+                       let answeredToday = data["answeredToday"] as? Bool ?? false
+                       let lastAnsweredDate = (data["lastAnsweredDate"] as? Timestamp)?.dateValue() ?? Date.distantPast
+                       let totalQuestionsAnswered = data["totalQuestionsAnswered"] as? Int ?? 0
+                       let correctAnswers = data["correctAnswers"] as? Int ?? 0
+                       let longestBreak = data["longestBreak"] as? Int ?? 0
+
+                       print("Max Streak: \(maxStreak)")
+                       print("Current Streak: \(currentStreak)")
+                       print("Active Days: \(activeDays)")
+
+                       // Call the closure to update the UI
+                       self.streakDataFetched?(maxStreak, currentStreak, activeDays)
+
+                       // Call method to calculate streak stats
+                       self.calculateStreakStats(
+                           maxStreak: maxStreak,
+                           answeredToday: answeredToday,
+                           currentStreak: currentStreak,
+                           activeDays: activeDays,
+                           lastAnsweredDate: lastAnsweredDate,
+                           totalQuestionsAnswered: totalQuestionsAnswered,
+                           correctAnswers: correctAnswers,
+                           longestBreak: longestBreak
+                       )
+                   }
+               } else {
+                   print("No streak data found.")
+               }
+           }
+       }
+
+       // Calculate streak stats
+//       func calculateStreakStats(
+//           maxStreak: Int,
+//           answeredToday: Bool,
+//           currentStreak: Int,
+//           activeDays: Int,
+//           lastAnsweredDate: Date,
+//           totalQuestionsAnswered: Int,
+//           correctAnswers: Int,
+//           longestBreak: Int
+//       ) {
+//           let calendar = Calendar.current
+//           let today = Date()
+//
+//           var newCurrentStreak = currentStreak
+//           var newMaxStreak = maxStreak
+//           var newActiveDays = activeDays
+//           var newAnsweredToday = answeredToday
+//           var newLongestBreak = longestBreak
+//           var newTotalQuestionsAnswered = totalQuestionsAnswered + 1  // Increment count
+//           var newCorrectAnswers = correctAnswers // Increment based on correctness (handled later)
+//
+//           let daysSinceLastAnswer = calendar.dateComponents([.day], from: lastAnsweredDate, to: today).day ?? 0
+//
+//           if calendar.isDateInToday(lastAnsweredDate) {
+//               newAnsweredToday = true
+//           } else if daysSinceLastAnswer == 1 {
+//               newCurrentStreak += 1
+//               newAnsweredToday = true
+//           } else {
+//               newCurrentStreak = 1
+//               newAnsweredToday = false
+//               newLongestBreak = max(newLongestBreak, daysSinceLastAnswer) // Track longest break
+//           }
+//
+//           newMaxStreak = max(newMaxStreak, newCurrentStreak)
+//
+//           if !calendar.isDate(lastAnsweredDate, inSameDayAs: today) {
+//               newActiveDays += 1
+//           }
+//
+//           // Update streak data after calculation
+//           self.updateStreakData(
+//               maxStreak: newMaxStreak,
+//               answeredToday: newAnsweredToday,
+//               currentStreak: newCurrentStreak,
+//               activeDays: newActiveDays,
+//               totalQuestionsAnswered: newTotalQuestionsAnswered,
+//               correctAnswers: newCorrectAnswers,
+//               longestBreak: newLongestBreak
+//           )
+//       }
+//
+//       // Update streak data in Firestore
+//       func updateStreakData(
+//           maxStreak: Int,
+//           answeredToday: Bool,
+//           currentStreak: Int,
+//           activeDays: Int,
+//           totalQuestionsAnswered: Int,
+//           correctAnswers: Int,
+//           longestBreak: Int
+//       ) {
+//           let coreRef = db.collection("users").document(verifiedUserDocID).collection("core").document("streakData")
+//
+//           coreRef.setData([
+//               "maxStreak": maxStreak,
+//               "answeredToday": answeredToday,
+//               "currentStreak": currentStreak,
+//               "activeDays": activeDays,
+//               "totalQuestionsAnswered": totalQuestionsAnswered,
+//               "correctAnswers": correctAnswers,
+//               "longestBreak": longestBreak,
+//               "lastAnsweredDate": Timestamp(date: Date())
+//           ], merge: true) { error in
+//               if let error = error {
+//                   print("Error updating streak data: \(error.localizedDescription)")
+//               } else {
+//                   print("Streak data successfully updated")
+//               }
+//           }
+//       }
+    
+    
+func calculateStreakStats(
+    maxStreak: Int,
+    answeredToday: Bool,
+    currentStreak: Int,
+    activeDays: Int,
+    lastAnsweredDate: Date,
+    totalQuestionsAnswered: Int,
+    correctAnswers: Int,
+    longestBreak: Int
+) {
+    let calendar = Calendar.current
+    let today = Date()
+
+    var newCurrentStreak = currentStreak
+    var newMaxStreak = maxStreak
+    var newActiveDays = activeDays
+    var newAnsweredToday = answeredToday
+    var newLongestBreak = longestBreak
+    var newTotalQuestionsAnswered = totalQuestionsAnswered + 1  // Increment count
+    var newCorrectAnswers = correctAnswers // Increment based on correctness (handled later)
+
+    let daysSinceLastAnswer = calendar.dateComponents([.day], from: lastAnsweredDate, to: today).day ?? 0
+
+    if calendar.isDateInToday(lastAnsweredDate) {
+        newAnsweredToday = true
+    } else if daysSinceLastAnswer == 1 {
+        newCurrentStreak += 1
+        newAnsweredToday = true
+    } else {
+        newCurrentStreak = 1
+        newAnsweredToday = false
+        newLongestBreak = max(newLongestBreak, daysSinceLastAnswer) // Track longest break
+    }
+
+    newMaxStreak = max(newMaxStreak, newCurrentStreak)
+
+    if !calendar.isDate(lastAnsweredDate, inSameDayAs: today) {
+        newActiveDays += 1
+    }
+
+    updateStreakData(
+        maxStreak: newMaxStreak,
+        answeredToday: newAnsweredToday,
+        currentStreak: newCurrentStreak,
+        activeDays: newActiveDays,
+        totalQuestionsAnswered: newTotalQuestionsAnswered,
+        correctAnswers: newCorrectAnswers,
+        longestBreak: newLongestBreak
+    )
 }
+
+    
+func updateStreakData(
+    maxStreak: Int,
+    answeredToday: Bool,
+    currentStreak: Int,
+    activeDays: Int,
+    totalQuestionsAnswered: Int,
+    correctAnswers: Int,
+    longestBreak: Int
+) {
+    //        guard let verifiedUserDocID = getCurrentUserID() else { return }
+    
+    let coreRef = db.collection("users").document(verifiedUserDocID).collection("core").document("streakData")
+    
+    coreRef.setData([
+        "maxStreak": maxStreak,
+        "answeredToday": answeredToday,
+        "currentStreak": currentStreak,
+        "activeDays": activeDays,
+        "totalQuestionsAnswered": totalQuestionsAnswered,
+        "correctAnswers": correctAnswers,
+        "longestBreak": longestBreak,
+        "lastAnsweredDate": Timestamp(date: Date())
+    ], merge: true) { error in
+        if let error = error {
+            print("Error updating streak data: \(error.localizedDescription)")
+        } else {
+            print("Streak data successfully updated")
+        }
+    }
+}
+    }
+
+
+   
+

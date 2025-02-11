@@ -15,7 +15,6 @@ extension PatientLoginViewController {
     @objc func rememberMeTapped() {
         rememberMeButton.isSelected.toggle()
     }
-    
 
     @objc func loginTapped() {
         print("Login tapped")
@@ -45,7 +44,7 @@ extension PatientLoginViewController {
                     UserDefaultsStorageProfile.shared.saveProfile(details: userDetails.dictionary, image: nil) { [weak loginVC] success in
                         if success {
                             // Fetch family members
-                            FirebaseManager.shared.fetchFamilyMembers(for: userId) { familyMembers, error in
+                            FirebaseManager.shared.fetchFamilyMembers(for: userId) { familyMembers, _ in
                                 if let familyMembers = familyMembers {
                                     // Handle family members as needed
                                 }
@@ -121,6 +120,9 @@ extension PatientLoginViewController {
     }
 
     private func fetchOrCreateUserProfile(userId: String, email: String) {
+        UserDefaults.standard
+            .set(true, forKey: Constants.UserDefaultsKeys.isPatientLoggedIn)
+        UserDefaults.standard.synchronize()
         let db = Firestore.firestore()
 
         db.collection("users").document(userId).getDocument { [weak self] document, error in
@@ -158,7 +160,7 @@ extension PatientLoginViewController {
                         "stage": "",
                         "profileImageURL": "",
                         "familyMembers": [],
-                        "type": "patient"
+                        "type": "patient",
                     ]
 
                     // Save the initial user profile to Firestore
@@ -177,7 +179,7 @@ extension PatientLoginViewController {
             }
         }
     }
-    
+
     private func fetchUserProfileAndNavigate(userId: String) {
         let db = Firestore.firestore()
 
@@ -220,7 +222,14 @@ extension PatientLoginViewController {
             GIDSignIn.sharedInstance.signOut()
 
             // Clear user session and local storage
-            UserDefaults.standard.removeObject(forKey: "hasCompletedProfile")
+            UserDefaults.standard
+                .removeObject(
+                    forKey: Constants.UserDefaultsKeys.hasPatientCompletedProfile
+                )
+            UserDefaults.standard
+                .removeObject(
+                    forKey: Constants.UserDefaultsKeys.isPatientLoggedIn
+                )
             UserDefaultsStorageProfile.shared.clearProfile()
 
             // Animate the swipe down effect

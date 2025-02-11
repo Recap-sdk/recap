@@ -8,7 +8,6 @@
 import FirebaseAuth
 import UIKit
 
-// MARK: - FamilyMemberDetails
 struct FamilyMemberDetails {
     let firstName: String
     let lastName: String
@@ -29,7 +28,6 @@ struct FamilyMemberDetails {
     }
 }
 
-// MARK: - RelationshipOptions
 enum RelationshipOptions: String, CaseIterable {
     case parent = "Parent"
     case sibling = "Sibling"
@@ -38,12 +36,10 @@ enum RelationshipOptions: String, CaseIterable {
     case other = "Other"
 }
 
-// MARK: - FamilyInfoDelegate
 protocol FamilyInfoDelegate: AnyObject {
     func didSaveFamilyMember(_ member: FamilyMemberDetails)
 }
 
-// MARK: - familyInfo class
 class familyInfo: UIViewController {
     weak var delegate: FamilyInfoDelegate?
 
@@ -59,7 +55,6 @@ class familyInfo: UIViewController {
         super.init(coder: coder)
     }
 
-    // MARK: - UI Components
     private let profileImageView: UIImageView = {
         let imageView = UIImageView()
         imageView.contentMode = .scaleAspectFill
@@ -95,7 +90,6 @@ class familyInfo: UIViewController {
         return button
     }()
 
-    // MARK: - Properties
     private let imagePicker = UIImagePickerController()
     private let datePicker = UIDatePicker()
     private let relationshipPicker = UIPickerView()
@@ -104,7 +98,6 @@ class familyInfo: UIViewController {
     let relationshipOptions = RelationshipOptions.allCases.map { $0.rawValue }
     let bloodGroupOptions = BloodGroupOptions.allCases.map { $0.rawValue }
 
-    // MARK: - Lifecycle
     override func viewDidLoad() {
         title = "Add Family Member"
         super.viewDidLoad()
@@ -114,7 +107,6 @@ class familyInfo: UIViewController {
 //        setupTextFields()
     }
 
-    // MARK: - Setup
     private func setupUI() {
         view.backgroundColor = .systemBackground
 
@@ -149,7 +141,6 @@ class familyInfo: UIViewController {
         saveButton.addTarget(self, action: #selector(saveButtonTapped), for: .touchUpInside)
     }
 
-    // MARK: - Actions
     @objc private func saveButtonTapped() {
         // Validate inputs
         guard let firstName = firstNameField.text, !firstName.isEmpty,
@@ -161,7 +152,6 @@ class familyInfo: UIViewController {
             return
         }
 
-        // Create family member details object
         guard let userId = Auth.auth().currentUser?.uid else {
             showAlert(message: "User not logged in.")
             return
@@ -189,7 +179,6 @@ class familyInfo: UIViewController {
         }
     }
 
-    // MARK: - Helper Methods
     private func showAlert(message: String) {
         let alert = UIAlertController(title: "Error", message: message, preferredStyle: .alert)
         alert.addAction(UIAlertAction(title: "OK", style: .default))

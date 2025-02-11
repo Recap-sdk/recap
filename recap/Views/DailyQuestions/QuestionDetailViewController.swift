@@ -77,27 +77,27 @@ class QuestionDetailViewController: UIViewController {
         super.viewDidLoad()
         view.backgroundColor = UIColor(white: 0.95, alpha: 1.0)
         setupUI()
-        fetchQuestionFromFirestore()  // Fetch question from Firestore
+//        fetchQuestionFromFirestore()  // Fetch question from Firestore
     }
 
     // MARK: - Fetch Question from Firestore
-    private func fetchQuestionFromFirestore() {
-        guard let questionId = question?.id else { return }
-
-        db.collection("questions").document(questionId).getDocument { [weak self] (document, error) in
-            if let error = error {
-                print("Error fetching question: \(error.localizedDescription)")
-            } else if let document = document, document.exists, let data = document.data() {
-                // Initialize the question with the data dictionary
-                do {
-                    self?.question = try Question(from: data as! Decoder)  // Ensure the initializer for Question exists
-                    self?.setupUI()  // Update UI after fetching the question
-                } catch {
-                    print("Error initializing question: \(error.localizedDescription)")
-                }
-            }
-        }
-    }
+//    private func fetchQuestionFromFirestore() {
+//        guard let questionId = question?.id else { return }
+//
+//        db.collection("questions").document(questionId).getDocument { [weak self] (document, error) in
+//            if let error = error {
+//                print("Error fetching question: \(error.localizedDescription)")
+//            } else if let document = document, document.exists, let data = document.data() {
+//                // Initialize the question with the data dictionary
+//                do {
+//                    self?.question = try Question(from: data as! Decoder)  // Ensure the initializer for Question exists
+//                    self?.setupUI()  // Update UI after fetching the question
+//                } catch {
+//                    print("Error initializing question: \(error.localizedDescription)")
+//                }
+//            }
+//        }
+//    }
 
     // MARK: - UI Setup
     private func setupUI() {
@@ -144,41 +144,42 @@ class QuestionDetailViewController: UIViewController {
 
     // MARK: - Setup Constraints
     private func setupConstraints() {
-        NSLayoutConstraint.activate([
-            questionLabel.topAnchor.constraint(equalTo: view.safeAreaLayoutGuide.topAnchor, constant: 20),
-            questionLabel.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: 16),
-            questionLabel.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -16)
-        ])
-
-        if question?.image != nil {
             NSLayoutConstraint.activate([
-                questionImageView.topAnchor.constraint(equalTo: questionLabel.bottomAnchor, constant: 20),
-                questionImageView.centerXAnchor.constraint(equalTo: view.centerXAnchor),
-                questionImageView.widthAnchor.constraint(equalToConstant: 150),
-                questionImageView.heightAnchor.constraint(equalToConstant: 150),
-
-                optionsContainer.topAnchor.constraint(equalTo: questionImageView.bottomAnchor, constant: 20)
+                questionLabel.topAnchor.constraint(equalTo: view.safeAreaLayoutGuide.topAnchor, constant: 20),
+                questionLabel.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: 16),
+                questionLabel.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -16)
             ])
-        } else {
+        
+            if question?.image != nil {
+                NSLayoutConstraint.activate([
+                    questionImageView.topAnchor.constraint(equalTo: questionLabel.bottomAnchor, constant: 20),
+                    questionImageView.centerXAnchor.constraint(equalTo: view.centerXAnchor),
+                    questionImageView.widthAnchor.constraint(equalToConstant: 150),
+                    questionImageView.heightAnchor.constraint(equalToConstant: 150),
+
+                    optionsContainer.topAnchor.constraint(equalTo: questionImageView.bottomAnchor, constant: 40)
+                ])
+            } else {
+                NSLayoutConstraint.activate([
+                    optionsContainer.topAnchor.constraint(equalTo: questionLabel.bottomAnchor, constant: 70)
+                ])
+            }
             NSLayoutConstraint.activate([
-                optionsContainer.topAnchor.constraint(equalTo: questionLabel.bottomAnchor, constant: 20)
+                optionsContainer.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: 16),
+                optionsContainer.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -16)
+            ])
+
+            NSLayoutConstraint.activate([
+                submitButton.bottomAnchor.constraint(equalTo: footerLabel.topAnchor, constant: -20),
+                submitButton.centerXAnchor.constraint(equalTo: view.centerXAnchor),
+                submitButton.widthAnchor.constraint(equalToConstant: 120),
+                submitButton.heightAnchor.constraint(equalToConstant: 50),
+
+                footerLabel.bottomAnchor.constraint(equalTo: view.safeAreaLayoutGuide.bottomAnchor, constant: -20),
+                footerLabel.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: 16),
+                footerLabel.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -16)
             ])
         }
-
-        NSLayoutConstraint.activate([
-            optionsContainer.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: 16),
-            optionsContainer.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -16),
-
-            submitButton.topAnchor.constraint(equalTo: optionsContainer.bottomAnchor, constant: 30),
-            submitButton.centerXAnchor.constraint(equalTo: view.centerXAnchor),
-            submitButton.widthAnchor.constraint(equalToConstant: 120),
-            submitButton.heightAnchor.constraint(equalToConstant: 50),
-
-            footerLabel.topAnchor.constraint(equalTo: submitButton.bottomAnchor, constant: 20),
-            footerLabel.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: 16),
-            footerLabel.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -16)
-        ])
-    }
 
     // MARK: - Create Option Button
     private func createOptionButton(with title: String) -> UIButton {

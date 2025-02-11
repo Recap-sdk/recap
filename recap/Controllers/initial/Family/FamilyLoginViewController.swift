@@ -122,8 +122,13 @@ class FamilyLoginViewController: UIViewController {
                 loginTapped()
             }
         }
-        
         setupUI()
+        let Dismisskeyboard = UITapGestureRecognizer(target: self, action: #selector(dismissKeyboard))
+                view.addGestureRecognizer(Dismisskeyboard)
+    }
+    
+    @objc func dismissKeyboard() {
+        view.endEditing(true)
     }
     
     // MARK: - Setup UI

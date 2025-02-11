@@ -325,10 +325,7 @@ class WelcomeViewController: UIViewController {
     @objc private func familyButtonTapped() {
         print("Family button tapped")
         let tabBarFamilyVC = FamilyLoginViewController()
-        // Use rootViewController or present as modal depending on your flow
-        if let window = view.window {
-            window.rootViewController = tabBarFamilyVC
-        }
+        navigationController?.pushViewController(tabBarFamilyVC, animated: true)
     }
 
 }

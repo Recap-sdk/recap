@@ -5,8 +5,8 @@
 //  Created by Diptayan Jash on 14/12/24.
 //
 
-import Foundation
 import FirebaseFirestore
+import Foundation
 
 protocol DataFetchProtocol {
     func fetchRapidQuestions(completion: @escaping ([rapiMemory]?, Error?) -> Void)
@@ -43,28 +43,32 @@ class DataFetch: DataFetchProtocol {
 
     // Fetch family members
     func fetchFamilyMembers(userId: String, completion: @escaping ([FamilyMember]?, Error?) -> Void) {
-        firestore.collection("users").document(userId).collection("family_members").getDocuments { snapshot, error in
-            if let error = error {
-                print("Error fetching family members: \(error.localizedDescription)")
-                completion(nil, error)
-                return
+        firestore.collection(Constants.FirestoreKeys.usersCollection)
+            .document(userId)
+            .collection(Constants.FirestoreKeys.familyMembersCollection)
+            .getDocuments { snapshot, error in
+                if let error = error {
+                    print("Error fetching family members: \(error.localizedDescription)")
+                    completion(nil, error)
+                    return
+                }
+                let familyMembers = snapshot?.documents.compactMap { doc -> FamilyMember? in
+                    let data = doc.data()
+                    return FamilyMember(
+                        id: doc.documentID,
+                        name: data["name"] as? String ?? "",
+                        relationship: data["relationship"] as? String ?? "",
+                        phone: data["phone"] as? String ?? "",
+                        email: data["email"] as? String ?? "",
+                        password: data["password"] as? String ?? "",
+                        imageName: data["imageName"] as? String ?? "",
+                        imageURL: data["imageURL"] as? String ?? ""
+                    )
+                }
+                completion(familyMembers, nil)
             }
-            let familyMembers = snapshot?.documents.compactMap { doc -> FamilyMember? in
-                let data = doc.data()
-                return FamilyMember(
-                    id: doc.documentID,
-                    name: data["name"] as? String ?? "",
-                    relationship: data["relationship"] as? String ?? "",
-                    phone: data["phone"] as? String ?? "",
-                    email: data["email"] as? String ?? "",
-                    password: data["password"] as? String ?? "",
-                    imageName: data["imageName"] as? String ?? "",
-                    imageURL: data["imageURL"] as? String ?? ""
-                )
-            }
-            completion(familyMembers, nil)
-        }
     }
+
     func fetchLastMemoryCheck(userId: String, completion: @escaping (String) -> Void) {
         FirebaseManager.shared.firestore
             .collection("users").document(userId)

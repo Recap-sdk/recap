@@ -47,20 +47,24 @@ class FamilyProfileViewController: UIViewController, UITableViewDelegate, UITabl
         return button
     }()
 
+
     override func viewDidLoad() {
         super.viewDidLoad()
         view.backgroundColor = .systemBackground
         setupNavigationBar()
         setupUI()
         setupTableView()
-
         // Load stored family member details
-        if let familyMemberData = UserDefaults.standard.dictionary(forKey: "familyMemberDetails"),
-           let name = familyMemberData["name"] as? String {
-            nameLabel.text = name
-        } else {
-            nameLabel.text = "Unknown Family Member"
-        }
+           if let familyMemberData = UserDefaults.standard.dictionary(forKey: Constants.UserDefaultsKeys.familyMemberDetails),
+              let name = familyMemberData["name"] as? String {
+               nameLabel.text = name
+           } else {
+               nameLabel.text = "Unknown Family Member"
+           }
+           // Load profile image from stored URL
+           if let imageUrl = UserDefaults.standard.string(forKey: Constants.UserDefaultsKeys.familyMemberImageURL) {
+               profileImageView.sd_setImage(with: URL(string: imageUrl), placeholderImage: UIImage(systemName: "person.circle.fill"))
+           }
     }
 
     private func setupNavigationBar() {

@@ -8,6 +8,7 @@
 import UIKit
 
 extension StreaksViewController {
+    
     // MARK: - Setup Gradient Background
     func setupGradientBackground() {
         let gradientLayer = CAGradientLayer()
@@ -44,6 +45,55 @@ extension StreaksViewController {
     }
     
     // MARK: - Setup Streak Stats View
+//    func setupStreakStatsView() {
+//        streakStatsView.backgroundColor = .white
+//        streakStatsView.layer.cornerRadius = 12
+//        streakStatsView.layer.shadowColor = UIColor.black.cgColor
+//        streakStatsView.layer.shadowOpacity = 0.1
+//        streakStatsView.layer.shadowOffset = CGSize(width: 0, height: 2)
+//        streakStatsView.layer.shadowRadius = 4
+//        streakStatsView.translatesAutoresizingMaskIntoConstraints = false
+//        view.addSubview(streakStatsView)
+//
+//        let streakStatsStackView = UIStackView()
+//        streakStatsStackView.axis = .horizontal
+//        streakStatsStackView.distribution = .fillEqually
+//        streakStatsStackView.alignment = .center
+//        streakStatsStackView.translatesAutoresizingMaskIntoConstraints = false
+//
+//        let maxStreakView = createStatView(title: "Max Streak", value: "0")
+//        let currentStreakView = createStatView(title: "Current Streak", value: "0")
+//        let activeDaysView = createStatView(title: "Active Days", value: "0")
+//
+//        streakStatsStackView.addArrangedSubview(maxStreakView)
+//        streakStatsStackView.addArrangedSubview(currentStreakView)
+//        streakStatsStackView.addArrangedSubview(activeDaysView)
+//
+//        streakStatsView.addSubview(streakStatsStackView)
+//
+//        NSLayoutConstraint.activate([
+//            streakStatsView.topAnchor.constraint(equalTo: view.safeAreaLayoutGuide.topAnchor, constant: 16),
+//            streakStatsView.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: 16),
+//            streakStatsView.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -16),
+//            streakStatsView.heightAnchor.constraint(equalToConstant: 80),  // Decreased height
+//
+//            streakStatsStackView.leadingAnchor.constraint(equalTo: streakStatsView.leadingAnchor, constant: 16),
+//            streakStatsStackView.trailingAnchor.constraint(equalTo: streakStatsView.trailingAnchor, constant: -16),
+//            streakStatsStackView.topAnchor.constraint(equalTo: streakStatsView.topAnchor, constant: 16),
+//            streakStatsStackView.bottomAnchor.constraint(equalTo: streakStatsView.bottomAnchor, constant: -16)
+//        ])
+//    }
+    
+    // Method to update the streak stats on the UI
+    func updateStreakStats(maxStreak: Int, currentStreak: Int, activeDays: Int) {
+        DispatchQueue.main.async {
+            self.maxStreakLabel.text = "\(maxStreak)"
+            self.currentStreakLabel.text = "\(currentStreak)"
+            self.activeDaysLabel.text = "\(activeDays)"
+        }
+    }
+
+    // Method to set up the streak stats view
     func setupStreakStatsView() {
         streakStatsView.backgroundColor = .white
         streakStatsView.layer.cornerRadius = 12
@@ -53,36 +103,84 @@ extension StreaksViewController {
         streakStatsView.layer.shadowRadius = 4
         streakStatsView.translatesAutoresizingMaskIntoConstraints = false
         view.addSubview(streakStatsView)
-        
+
         let streakStatsStackView = UIStackView()
         streakStatsStackView.axis = .horizontal
         streakStatsStackView.distribution = .fillEqually
         streakStatsStackView.alignment = .center
+        streakStatsStackView.spacing = 10
         streakStatsStackView.translatesAutoresizingMaskIntoConstraints = false
-        
-        let maxStreakView = createStatView(title: "Max Streak", value: "0")
-        let currentStreakView = createStatView(title: "Current Streak", value: "0")
-        let activeDaysView = createStatView(title: "Active Days", value: "0")
-        
+
+        // Get the custom stat views and valueLabels
+        let (maxStreakView, maxStreakLabel) = createStatView(title: "Max Streak", value: "0")
+        let (currentStreakView, currentStreakLabel) = createStatView(title: "Current Streak", value: "0")
+        let (activeDaysView, activeDaysLabel) = createStatView(title: "Active Days", value: "0")
+
+        // Store references to the value labels for later updates
+        self.maxStreakLabel = maxStreakLabel
+        self.currentStreakLabel = currentStreakLabel
+        self.activeDaysLabel = activeDaysLabel
+
         streakStatsStackView.addArrangedSubview(maxStreakView)
         streakStatsStackView.addArrangedSubview(currentStreakView)
         streakStatsStackView.addArrangedSubview(activeDaysView)
-        
+
         streakStatsView.addSubview(streakStatsStackView)
-        
+
         NSLayoutConstraint.activate([
             streakStatsView.topAnchor.constraint(equalTo: view.safeAreaLayoutGuide.topAnchor, constant: 16),
             streakStatsView.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: 16),
             streakStatsView.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -16),
-            streakStatsView.heightAnchor.constraint(equalToConstant: 80),  // Decreased height
-            
+            streakStatsView.heightAnchor.constraint(equalToConstant: 80),  // Adjusted height
+
             streakStatsStackView.leadingAnchor.constraint(equalTo: streakStatsView.leadingAnchor, constant: 16),
             streakStatsStackView.trailingAnchor.constraint(equalTo: streakStatsView.trailingAnchor, constant: -16),
-            streakStatsStackView.topAnchor.constraint(equalTo: streakStatsView.topAnchor, constant: 16),
-            streakStatsStackView.bottomAnchor.constraint(equalTo: streakStatsView.bottomAnchor, constant: -16)
+            streakStatsStackView.topAnchor.constraint(equalTo: streakStatsView.topAnchor, constant: 12),
+            streakStatsStackView.bottomAnchor.constraint(equalTo: streakStatsView.bottomAnchor, constant: -12)
         ])
     }
-    
+
+    // Method to create a custom stat view with a title and value label
+    func createStatView(title: String, value: String) -> (UIView, UILabel) {
+        let statView = UIView()
+        statView.translatesAutoresizingMaskIntoConstraints = false
+
+        // Create and configure the value label (NUMBER IN MIDDLE)
+        let valueLabel = UILabel()
+        valueLabel.text = value
+        valueLabel.font = UIFont.boldSystemFont(ofSize: 28) // Large size for emphasis
+        valueLabel.textColor = .orange // Number in Orange
+        valueLabel.textAlignment = .center
+        valueLabel.translatesAutoresizingMaskIntoConstraints = false
+
+        // Create and configure the title label (TEXT BELOW NUMBER)
+        let titleLabel = UILabel()
+        titleLabel.text = title
+        titleLabel.font = UIFont.systemFont(ofSize: 12)
+        titleLabel.textColor = .gray
+        titleLabel.textAlignment = .center
+        titleLabel.translatesAutoresizingMaskIntoConstraints = false
+
+        // Add the labels to the statView
+        statView.addSubview(valueLabel)
+        statView.addSubview(titleLabel)
+
+        // Set up constraints for the labels
+        NSLayoutConstraint.activate([
+            valueLabel.centerXAnchor.constraint(equalTo: statView.centerXAnchor),
+            valueLabel.topAnchor.constraint(equalTo: statView.topAnchor),
+
+            titleLabel.centerXAnchor.constraint(equalTo: statView.centerXAnchor),
+            titleLabel.topAnchor.constraint(equalTo: valueLabel.bottomAnchor, constant: 4),
+            titleLabel.bottomAnchor.constraint(equalTo: statView.bottomAnchor)
+        ])
+
+        return (statView, valueLabel)
+    }
+
+
+
+
     func setupHeaderView() {
         headerView.backgroundColor = .white
         headerView.layer.cornerRadius = 12

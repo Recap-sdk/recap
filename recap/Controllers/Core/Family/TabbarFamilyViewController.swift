@@ -12,8 +12,12 @@ class TabbarFamilyViewController: UITabBarController, UITabBarControllerDelegate
     override func viewDidLoad() {
         super.viewDidLoad()
         self.delegate = self
+        
+        let grayColor = UIColor(white: 0.95, alpha: 0.85)
+               tabBar.backgroundColor = grayColor
+               tabBar.barTintColor = grayColor
+               tabBar.isTranslucent = true
 
-        // Setup View Controllers
         let tab1 = FamilyViewController()
         let tab2 = ArticleTableViewController()
         
@@ -40,16 +44,6 @@ class TabbarFamilyViewController: UITabBarController, UITabBarControllerDelegate
         let generator = UIImpactFeedbackGenerator(style: .light)
         generator.impactOccurred()
     }
-    
-    /*
-    // MARK: - Navigation
-
-    // In a storyboard-based application, you will often want to do a little preparation before navigation
-    override func prepare(for segue: UIStoryboardSegue, sender: Any?) {
-        // Get the new view controller using segue.destination.
-        // Pass the selected object to the new view controller.
-    }
-    */
 }
 
 #Preview() {

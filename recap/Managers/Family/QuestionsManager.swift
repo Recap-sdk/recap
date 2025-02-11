@@ -15,18 +15,18 @@ class QuestionsManager {
         self.verifiedUserDocID = verifiedUserDocID
     }
 
-    func startFetchingQuestions(completion: @escaping ([Question]) -> Void) {
-        fetchQuestions(completion: completion)
-        
-        timer = Timer.scheduledTimer(withTimeInterval: 86400.0, repeats: true) { _ in
-            self.fetchQuestions(completion: completion)
-        }
-    }
+//    func startFetchingQuestions(completion: @escaping ([Question]) -> Void) {
+//        fetchQuestions(completion: completion)
+//        
+//        timer = Timer.scheduledTimer(withTimeInterval: 86400.0, repeats: true) { _ in
+//            self.fetchQuestions(completion: completion)
+//        }
+//    }
 
-    func stopFetchingQuestions() {
-        timer?.invalidate()
-        timer = nil
-    }
+//    func stopFetchingQuestions() {
+//        timer?.invalidate()
+//        timer = nil
+//    }
 
     func fetchQuestions(completion: @escaping ([Question]) -> Void) {
         let db = Firestore.firestore()

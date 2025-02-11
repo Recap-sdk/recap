@@ -13,6 +13,7 @@ class FamilyViewController: UIViewController {
     private let scrollView = UIScrollView()
     private let contentView = UIView()
 
+
     private lazy var profileButton: UIButton = {
         let button = UIButton(type: .system)
         let config = UIImage.SymbolConfiguration(pointSize: 28, weight: .medium)
@@ -22,7 +23,11 @@ class FamilyViewController: UIViewController {
         button.addTarget(self, action: #selector(profileButtonTapped), for: .touchUpInside)
         return button
     }()
-    let dailyQuestionsVC = DailyQuestionsViewController()
+//    let dailyQuestionsVC = DailyQuestionsViewController()
+    
+    private var maxStreak: Int = 15
+    private var currentStreak: Int = 7
+    private var activeDays: Int = 30
 
     override func viewDidLoad() {
         super.viewDidLoad()
@@ -48,7 +53,16 @@ class FamilyViewController: UIViewController {
         contentView.translatesAutoresizingMaskIntoConstraints = false
         scrollView.addSubview(contentView)
         view.addSubview(scrollView)
-        
+        let streakCard = StreakCardView()
+               streakCard.onTap = { [weak self] in
+                   if let verifiedUserDocID = UserDefaults.standard.string(forKey: "verifiedUserDocID") {
+                       let streaksVC = StreaksViewController(verifiedUserDocID: verifiedUserDocID)
+                       self?.navigationController?.pushViewController(streaksVC, animated: true)
+                   } else {
+                       print("Error: verifiedUserDocID not found in UserDefaults.")
+                   }
+               }
+        streakCard.updateStreakStats(maxStreak: maxStreak, currentStreak: currentStreak, activeDays: activeDays)
         let dailyQuestionCard = DailyQuestionCardView()
         dailyQuestionCard.navigateToDetail = {
             if let verifiedUserDocID = UserDefaults.standard.string(forKey: "verifiedUserDocID") {
@@ -74,15 +88,15 @@ class FamilyViewController: UIViewController {
 
        
         // Daily Question, Streak, and Trends Cards
-        let streakCard = StreakCardView()
-        streakCard.onTap = { [weak self] in
-            if let verifiedUserDocID = UserDefaults.standard.string(forKey: "verifiedUserDocID") {
-                let streaksVC = StreaksViewController(verifiedUserDocID: verifiedUserDocID)
-                self?.navigationController?.pushViewController(streaksVC, animated: true)
-            } else {
-                print("Error: verifiedUserDocID not found in UserDefaults.")
-            }
-        }
+//        let streakCard = StreakCardView()
+//        streakCard.onTap = { [weak self] in
+//            if let verifiedUserDocID = UserDefaults.standard.string(forKey: "verifiedUserDocID") {
+//                let streaksVC = StreaksViewController(verifiedUserDocID: verifiedUserDocID)
+//                self?.navigationController?.pushViewController(streaksVC, animated: true)
+//            } else {
+//                print("Error: verifiedUserDocID not found in UserDefaults.")
+//            }
+//        }
 
         
         let trendsCard = TrendsCardView()
@@ -108,10 +122,10 @@ class FamilyViewController: UIViewController {
 
         // Vertical StackView for Daily Question and Streak
         let dailyAndStreakStackView = UIStackView(arrangedSubviews: [dailyQuestionCard, streakCard])
-        dailyAndStreakStackView.axis = .vertical
-        dailyAndStreakStackView.spacing = 16
-        dailyAndStreakStackView.translatesAutoresizingMaskIntoConstraints = false
-
+               dailyAndStreakStackView.axis = .vertical
+               dailyAndStreakStackView.spacing = 16
+               dailyAndStreakStackView.translatesAutoresizingMaskIntoConstraints = false
+               
         let trendsCardStackView = UIStackView(arrangedSubviews: [trendsCard])
         trendsCardStackView.axis = .horizontal
         trendsCardStackView.spacing = 16

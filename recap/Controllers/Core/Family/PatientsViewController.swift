@@ -8,13 +8,12 @@
 import UIKit
 
 class PatientsViewController: UIViewController, UITableViewDelegate, UITableViewDataSource {
-    // Data passed from ProfileViewController
     var userDetails: [String: Any]?
     var prefetchedQuestions: [rapiMemory]?
 
     private let profileImageView: UIImageView = {
             let imageView = UIImageView()
-            imageView.image = UIImage(systemName: "person.circle.fill") // Replace with your image name
+            imageView.image = UIImage(systemName: "person.circle.fill")
             imageView.contentMode = .scaleAspectFill
             imageView.layer.cornerRadius = 50
             imageView.clipsToBounds = true
@@ -71,12 +70,9 @@ class PatientsViewController: UIViewController, UITableViewDelegate, UITableView
                     }
                 }
             }
-            
             tableView.reloadData()
         }
     }
-
-    
 
     private func setupNavigationBar() {
         let doneButton = UIBarButtonItem(
@@ -119,8 +115,6 @@ class PatientsViewController: UIViewController, UITableViewDelegate, UITableView
         tableView.dataSource = self
         tableView.register(UITableViewCell.self, forCellReuseIdentifier: "cell")
     }
-
-    // MARK: - UITableViewDelegate & DataSource Methods
 
     func numberOfSections(in tableView: UITableView) -> Int {
         return 1

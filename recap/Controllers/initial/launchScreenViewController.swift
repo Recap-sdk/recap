@@ -8,7 +8,6 @@
 import UIKit
 
 class launchScreenViewController: UIViewController {
-    
     private let logoImageView: UIImageView = {
         let imageView = UIImageView()
         imageView.contentMode = .scaleAspectFit
@@ -16,51 +15,51 @@ class launchScreenViewController: UIViewController {
         imageView.translatesAutoresizingMaskIntoConstraints = false
         return imageView
     }()
-    
+
     private let gradientLayer: CAGradientLayer = {
         let gradient = CAGradientLayer()
         gradient.colors = [
 //            UIColor.systemBlue.cgColor,
 //            UIColor.systemPurple.cgColor
             UIColor(red: 0.69, green: 0.88, blue: 0.88, alpha: 1.0).cgColor,
-            UIColor(red: 0.94, green: 0.74, blue: 0.80, alpha: 1.0).cgColor
-
-            
+            UIColor(red: 0.94, green: 0.74, blue: 0.80, alpha: 1.0).cgColor,
         ]
 //        gradient.locations = [0.0, 1.0]
         gradient.startPoint = CGPoint(x: 0.0, y: 0.0)
         gradient.endPoint = CGPoint(x: 1.0, y: 1.0)
         return gradient
     }()
-    
+
     // MARK: - Lifecycle
+
     override func viewDidLoad() {
         super.viewDidLoad()
         setupUI()
         animateLogo()
     }
-    
+
     override func viewDidLayoutSubviews() {
         super.viewDidLayoutSubviews()
         gradientLayer.frame = view.bounds
     }
-    
+
     // MARK: - Setup
+
     private func setupUI() {
         view.layer.insertSublayer(gradientLayer, at: 0)
-        
+
         view.addSubview(logoImageView)
-        
+
         NSLayoutConstraint.activate([
             logoImageView.centerXAnchor.constraint(equalTo: view.centerXAnchor),
             logoImageView.centerYAnchor.constraint(equalTo: view.centerYAnchor),
             logoImageView.widthAnchor.constraint(equalToConstant: 200),
-            logoImageView.heightAnchor.constraint(equalToConstant: 200)
+            logoImageView.heightAnchor.constraint(equalToConstant: 200),
         ])
-        
+
         logoImageView.alpha = 0
     }
-    
+
     private func animateLogo() {
         // Fade in animation
         UIView.animate(withDuration: 1.0, animations: { [weak self] in
@@ -71,37 +70,36 @@ class launchScreenViewController: UIViewController {
             }
         }
     }
-    
+
     private func transitionToMainScreen() {
-        if UserDefaults.standard.bool(forKey: "hasCompletedProfile") {
-            let tabBar = TabbarViewController()
-            UIView.transition(with: view.window!,
-                              duration: 0.3,
-                              options: .transitionCrossDissolve,
-                              animations: {
-                self.view.window?.rootViewController = tabBar
-            })
+        if UserDefaults.standard
+            .bool(forKey: Constants.UserDefaultsKeys.isFamilyMemberLoggedIn) {
+            // Navigate directly to the family tab bar
+            let familyTabBarVC = TabbarFamilyViewController()
+            transitionToRootViewController(familyTabBarVC)
+        } else if UserDefaults.standard.bool(forKey: Constants.UserDefaultsKeys.hasPatientCompletedProfile) || UserDefaults.standard.bool(
+            forKey: Constants.UserDefaultsKeys.isPatientLoggedIn
+        ) {
+            // Navigate directly to the patient tab bar
+            let patientTabBarVC = TabbarViewController()
+            transitionToRootViewController(patientTabBarVC)
         } else {
-//            let patientInfoVC = patientInfo()
-//            patientInfoVC.delegate = UIApplication.shared.connectedScenes
-//                .first?.delegate as? PatientInfoDelegate
-//            let nav = UINavigationController(rootViewController: patientInfoVC)
-//            
-//            if let sheet = nav.sheetPresentationController {
-//                sheet.detents = [.large()]
-//                sheet.preferredCornerRadius = 30
-//            }
-//            present(nav, animated: true)
+            // Navigate to the welcome screen
             let welcomeVC = WelcomeViewController()
-            let nav = UINavigationController(rootViewController: welcomeVC)
-            nav.modalPresentationStyle = .fullScreen
-            
-            UIView.transition(with: self.view.window!, duration: 0.5, options: .transitionCrossDissolve, animations: {
-                self.view.window?.rootViewController = nav
-            }, completion: nil)
+            let navController = UINavigationController(rootViewController: welcomeVC)
+            navController.modalPresentationStyle = .fullScreen
+            transitionToRootViewController(navController)
         }
     }
+
+    private func transitionToRootViewController(_ viewController: UIViewController) {
+        guard let window = view.window else { return }
+        UIView.transition(with: window, duration: 0.5, options: .transitionCrossDissolve, animations: {
+            window.rootViewController = viewController
+        })
+    }
 }
-#Preview{
+
+#Preview {
     launchScreenViewController()
 }

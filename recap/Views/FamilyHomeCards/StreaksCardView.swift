@@ -42,6 +42,11 @@ class StreakCardView: UIView {
         return stackView
     }()
 
+    // Labels to update dynamically
+    private var maxStreakLabel: UILabel!
+    private var currentStreakLabel: UILabel!
+    private var activeDaysLabel: UILabel!
+
     init() {
         super.init(frame: .zero)
         setupUI()
@@ -71,9 +76,14 @@ class StreakCardView: UIView {
         let currentStreakView = createStatView(title: "Current Streak", value: "0")
         let activeDaysView = createStatView(title: "Active Days", value: "0")
 
-        statsStackView.addArrangedSubview(maxStreakView)
-        statsStackView.addArrangedSubview(currentStreakView)
-        statsStackView.addArrangedSubview(activeDaysView)
+        // Store references to value labels
+        self.maxStreakLabel = maxStreakView.1
+        self.currentStreakLabel = currentStreakView.1
+        self.activeDaysLabel = activeDaysView.1
+
+        statsStackView.addArrangedSubview(maxStreakView.0)
+        statsStackView.addArrangedSubview(currentStreakView.0)
+        statsStackView.addArrangedSubview(activeDaysView.0)
 
         NSLayoutConstraint.activate([
             streaksLabel.topAnchor.constraint(equalTo: topAnchor, constant: 16),
@@ -98,17 +108,18 @@ class StreakCardView: UIView {
         ])
     }
 
-    private func createStatView(title: String, value: String) -> UIView {
+    private func createStatView(title: String, value: String) -> (UIView, UILabel) {
         let statView = UIView()
-        let titleLabel = UILabel()
-        titleLabel.text = title
-        titleLabel.font = UIFont.systemFont(ofSize: 16, weight: .semibold)
-        titleLabel.textColor = .black
 
         let valueLabel = UILabel()
         valueLabel.text = value
         valueLabel.font = UIFont.systemFont(ofSize: 25, weight: .bold) // Increased font size
         valueLabel.textColor = .systemOrange
+
+        let titleLabel = UILabel()
+        titleLabel.text = title
+        titleLabel.font = UIFont.systemFont(ofSize: 16, weight: .semibold)
+        titleLabel.textColor = .black
 
         let stackView = UIStackView(arrangedSubviews: [valueLabel, titleLabel])
         stackView.axis = .vertical
@@ -123,7 +134,16 @@ class StreakCardView: UIView {
             stackView.centerYAnchor.constraint(equalTo: statView.centerYAnchor)
         ])
 
-        return statView
+        return (statView, valueLabel)
+    }
+
+    // Update streak stats with dynamic values
+    func updateStreakStats(maxStreak: Int, currentStreak: Int, activeDays: Int) {
+        DispatchQueue.main.async {
+            self.maxStreakLabel.text = "\(maxStreak)"
+            self.currentStreakLabel.text = "\(currentStreak)"
+            self.activeDaysLabel.text = "\(activeDays)"
+        }
     }
 
     private func addTapGesture() {
@@ -137,6 +157,3 @@ class StreakCardView: UIView {
     }
 }
 
-#Preview(){
-    StreakCardView()
-}

@@ -152,19 +152,16 @@ class AddQuestionViewController: UIViewController, UIImagePickerControllerDelega
         view.addSubview(addImageButton)
         view.addSubview(imageView)
         optionTextFields.forEach { view.addSubview($0) }
-        view.addSubview(timeFrameButton)
-        view.addSubview(categoryButton)
         view.addSubview(saveButton)
         view.addSubview(cancelImageButton)
 
         NSLayoutConstraint.activate([
             cancelImageButton.topAnchor.constraint(equalTo: imageView.topAnchor, constant: -10),
-               cancelImageButton.trailingAnchor.constraint(equalTo: imageView.trailingAnchor, constant: 10), // Moved to right-top
-               cancelImageButton.widthAnchor.constraint(equalToConstant: 24),
-               cancelImageButton.heightAnchor.constraint(equalToConstant: 24)
+            cancelImageButton.trailingAnchor.constraint(equalTo: imageView.trailingAnchor, constant: 10),
+            cancelImageButton.widthAnchor.constraint(equalToConstant: 24),
+            cancelImageButton.heightAnchor.constraint(equalToConstant: 24)
         ])
 
-        
         NSLayoutConstraint.activate([
             questionTextField.topAnchor.constraint(equalTo: view.safeAreaLayoutGuide.topAnchor, constant: 20),
             questionTextField.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: 20),
@@ -180,8 +177,6 @@ class AddQuestionViewController: UIViewController, UIImagePickerControllerDelega
             imageView.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: 20),
             imageView.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -20),
             imageView.heightAnchor.constraint(equalToConstant: 200)
-            
-            
         ])
 
         for (index, optionTextField) in optionTextFields.enumerated() {
@@ -194,43 +189,28 @@ class AddQuestionViewController: UIViewController, UIImagePickerControllerDelega
         }
 
         if let lastOption = optionTextFields.last {
+            let buttonStack = UIStackView(arrangedSubviews: [categoryButton, timeFrameButton])
+            buttonStack.axis = .horizontal
+            buttonStack.spacing = 20
+            buttonStack.alignment = .fill
+            buttonStack.distribution = .fillEqually
+            buttonStack.translatesAutoresizingMaskIntoConstraints = false
+            view.addSubview(buttonStack)
+
             NSLayoutConstraint.activate([
-                categoryButton.topAnchor.constraint(equalTo: lastOption.bottomAnchor, constant: 80),
-                categoryButton.centerXAnchor.constraint(equalTo: view.centerXAnchor),
-                categoryButton.widthAnchor.constraint(equalToConstant: 200),
-                categoryButton.heightAnchor.constraint(equalToConstant: 50)
+                buttonStack.topAnchor.constraint(equalTo: lastOption.bottomAnchor, constant: 30),
+                buttonStack.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: 20),
+                buttonStack.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -20),
+                buttonStack.heightAnchor.constraint(equalToConstant: 50)
+            ])
+
+            NSLayoutConstraint.activate([
+                saveButton.topAnchor.constraint(equalTo: buttonStack.bottomAnchor, constant: 30),
+                saveButton.centerXAnchor.constraint(equalTo: view.centerXAnchor),
+                saveButton.widthAnchor.constraint(equalToConstant: 250),
+                saveButton.heightAnchor.constraint(equalToConstant: 50)
             ])
         }
-        let buttonStack = UIStackView(arrangedSubviews: [categoryButton, timeFrameButton])
-        buttonStack.axis = .vertical
-        buttonStack.spacing = 20
-        buttonStack.alignment = .center
-        buttonStack.translatesAutoresizingMaskIntoConstraints = false
-
-        view.addSubview(buttonStack)
-
-        NSLayoutConstraint.activate([
-            buttonStack.topAnchor.constraint(equalTo: optionTextFields.last!.bottomAnchor, constant: 40),
-            buttonStack.centerXAnchor.constraint(equalTo: view.centerXAnchor)
-        ])
-
-        
-        NSLayoutConstraint.activate([
-            timeFrameButton.topAnchor.constraint(equalTo: categoryButton.bottomAnchor, constant: 20),
-            timeFrameButton.centerXAnchor.constraint(equalTo: view.centerXAnchor),
-            timeFrameButton.widthAnchor.constraint(equalToConstant: 200),
-            timeFrameButton.heightAnchor.constraint(equalToConstant: 50)
-        ])
-
-
-        NSLayoutConstraint.activate([
-            saveButton.topAnchor.constraint(equalTo: buttonStack.bottomAnchor, constant: 40),
-            saveButton.centerXAnchor.constraint(equalTo: view.centerXAnchor),
-            saveButton.widthAnchor.constraint(equalToConstant: 250),
-            saveButton.heightAnchor.constraint(equalToConstant: 50)
-        ])
-
-        
     }
 
     

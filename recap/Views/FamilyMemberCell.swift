@@ -106,16 +106,14 @@ class FamilyMemberCell: UICollectionViewCell {
 //        phoneLabel.text = familyMember.phone
 //    }
 
-
     func configure(with member: FamilyMember) {
         nameLabel.text = member.name
         relationshipLabel.text = member.relationship
-
-        if let savedImage = UserDefaultsStorageFamilyMember.shared.getFamilyMemberImage(for: member.id) {
-            profileImageView.image = savedImage
-        } else {
-            profileImageView.image = UIImage(systemName: "person.circle.fill")
-        }
+        profileImageView.sd_setImage(
+            with: URL(string: member.imageURL),
+            placeholderImage: UIImage(systemName: "person.circle.fill"),
+            options: .refreshCached
+        )
     }
 }
 

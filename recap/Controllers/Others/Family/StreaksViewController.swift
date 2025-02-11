@@ -18,6 +18,10 @@ class StreaksViewController: UIViewController {
 
     var currentMonth: Int = 11
     var currentYear: Int = 2024
+    var maxStreakLabel: UILabel!
+    var currentStreakLabel: UILabel!
+    var activeDaysLabel: UILabel!
+
     
     var streakDates: [String: Bool] = [:]
 
@@ -35,8 +39,6 @@ class StreaksViewController: UIViewController {
         self.calendarCollectionView = UICollectionView(frame: .zero, collectionViewLayout: layout)
 
         super.init(nibName: nil, bundle: nil)
-
-        // Initialize StreakService after `super.init`
         self.streakService = StreakService(verifiedUserDocID: self.verifiedUserDocID)
 
         print("✅ StreaksViewController initialized with User Doc ID: \(self.verifiedUserDocID)")
@@ -48,7 +50,7 @@ class StreaksViewController: UIViewController {
     
     override func viewDidLoad() {
         super.viewDidLoad()
-       
+
         let currentDate = Date()
         let calendar = Calendar.current
         let currentComponents = calendar.dateComponents([.year, .month], from: currentDate)
@@ -56,20 +58,25 @@ class StreaksViewController: UIViewController {
         currentYear = currentComponents.year!
         currentMonth = currentComponents.month!
         
-     
         view.backgroundColor = .white
         setupGradientBackground()
         setupNavBar()
         setupProfileView()
-        setupStreakStatsView()
+//        setupStreakStatsView()
         setupHeaderView()
         setupCalendarView()
         
         // Initialize the StreakService
         streakService = StreakService(verifiedUserDocID: verifiedUserDocID)
-//        addNovember2024StreakData()
+        streakService.streakDataFetched = { [weak self] maxStreak, currentStreak, activeDays in
+                   self?.updateStreakStats(maxStreak: maxStreak, currentStreak: currentStreak, activeDays: activeDays)
+               }
         // Fetch and update streak data from Firestore when view loads
         fetchAndUpdateStreakData()
+        setupStreakStatsView()
+//        streakService.fetchUserStreakData()
+        streakService.fetchAndPrintStreakData()
+//        addNovember2024StreakData()
     }
     
     func fetchAndUpdateStreakData() {
@@ -84,7 +91,6 @@ class StreaksViewController: UIViewController {
                 print("⚠️ No streak data found for \(yearMonth), but not uploading default data.")
             }
             
-            // Ensure the calendar reloads
             DispatchQueue.main.async {
                 self.calendarCollectionView.reloadData()
             }
@@ -99,9 +105,9 @@ class StreaksViewController: UIViewController {
               return
           }
 
-          let defaultMonth = "02" // Always set default to February
+          let defaultMonth = "02"
           let currentYear = Calendar.current.component(.year, from: Date())
-          let febYearMonth = "\(currentYear)-\(defaultMonth)" // Set to "YYYY-02"
+          let febYearMonth = "\(currentYear)-\(defaultMonth)"
           
           var defaultStreaks: [String: Bool] = [:]
           let numberOfDaysInFebruary = daysInMonth(year: currentYear, month: 2)
@@ -112,11 +118,10 @@ class StreaksViewController: UIViewController {
               defaultStreaks["\(febYearMonth)-\(date)"] = day % 2 == 1
           }
           
-          // Upload the default streaks to Firestore
         streakService.updateStreaksForUser(streaks: defaultStreaks) { success in
               if success {
                   print("✅ Default streak data for February uploaded successfully.")
-                  // self.updateStreakDatesWithStreaks(defaultStreaks)  // This line is now removed
+                  // self.updateStreakDatesWithStreaks(defaultStreaks)
               } else {
                   print("❌ Failed to upload default streak data.")
               }

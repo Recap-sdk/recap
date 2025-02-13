@@ -146,6 +146,8 @@
 			knownRegions = (
 				en,
 				Base,
+				hi,
+				"bn-IN",
 			);
 			mainGroup = 9DB56C972CDA2F4300E2B3FF;
 			minimizedProjectReferenceProxies = 1;

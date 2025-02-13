@@ -71,26 +71,44 @@ class launchScreenViewController: UIViewController {
         }
     }
 
-    private func transitionToMainScreen() {
-        if UserDefaults.standard
-            .bool(forKey: Constants.UserDefaultsKeys.isFamilyMemberLoggedIn) {
-            // Navigate directly to the family tab bar
-            let familyTabBarVC = TabbarFamilyViewController()
-            transitionToRootViewController(familyTabBarVC)
-        } else if UserDefaults.standard.bool(forKey: Constants.UserDefaultsKeys.hasPatientCompletedProfile) || UserDefaults.standard.bool(
-            forKey: Constants.UserDefaultsKeys.isPatientLoggedIn
-        ) {
-            // Navigate directly to the patient tab bar
-            let patientTabBarVC = TabbarViewController()
-            transitionToRootViewController(patientTabBarVC)
+    func transitionToMainScreen() {
+        // If onboarding is not completed, present it
+        if !UserDefaults.standard.bool(forKey: "HasCompletedOnboarding") {
+            let onboardingVC = OnboardingViewController()
+            let navController = UINavigationController(rootViewController: onboardingVC)
+            if let sheet = navController.sheetPresentationController {
+                sheet.detents = [.custom(
+                    identifier: .init(
+                        "customHeight"
+                    ),
+                    resolver: { _ in
+                        return UIScreen.main.bounds.height * 0.80
+                    })]
+                sheet.prefersGrabberVisible = true
+                sheet.prefersEdgeAttachedInCompactHeight = true
+            }
+            present(navController, animated: true)
         } else {
-            // Navigate to the welcome screen
-            let welcomeVC = WelcomeViewController()
-            let navController = UINavigationController(rootViewController: welcomeVC)
-            navController.modalPresentationStyle = .fullScreen
-            transitionToRootViewController(navController)
+            // If onboarding is completed, handle user login state
+            if UserDefaults.standard.bool(forKey: Constants.UserDefaultsKeys.isFamilyMemberLoggedIn) {
+                // Navigate to the family tab bar if family member is logged in
+                let familyTabBarVC = TabbarFamilyViewController()
+                transitionToRootViewController(familyTabBarVC)
+            } else if UserDefaults.standard.bool(forKey: Constants.UserDefaultsKeys.hasPatientCompletedProfile) ||
+                      UserDefaults.standard.bool(forKey: Constants.UserDefaultsKeys.isPatientLoggedIn) {
+                // Navigate to the patient tab bar if patient profile is completed or patient is logged in
+                let patientTabBarVC = TabbarViewController()
+                transitionToRootViewController(patientTabBarVC)
+            } else {
+                // Navigate to the welcome screen if neither condition is met
+                let welcomeVC = WelcomeViewController()
+                let navController = UINavigationController(rootViewController: welcomeVC)
+                navController.modalPresentationStyle = .fullScreen
+                transitionToRootViewController(navController)
+            }
         }
     }
+
 
     private func transitionToRootViewController(_ viewController: UIViewController) {
         guard let window = view.window else { return }

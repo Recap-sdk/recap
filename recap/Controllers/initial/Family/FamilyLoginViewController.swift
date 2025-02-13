@@ -21,7 +21,7 @@ class FamilyLoginViewController: UIViewController {
     
     private let titleLabel: UILabel = {
         let label = UILabel()
-        label.text = "Login 👋"
+        label.text = "Login"
         label.font = .systemFont(ofSize: 32, weight: .bold)
         return label
     }()

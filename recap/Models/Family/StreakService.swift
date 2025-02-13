@@ -48,6 +48,31 @@ class StreakService {
         let date = calendar.date(byAdding: .day, value: day, to: today)!
         return formatter.string(from: date)
     }
+    
+    func updateStreakForToday(with value: Bool) {
+        let today = getFormattedDateForToday()  // Use this function to get today's date
+        let yearMonth = today.prefix(7) // YYYY-MM
+        
+        let streakDocRef = db.collection("users").document(verifiedUserDocID).collection("streaks").document(String(yearMonth))
+        
+        // Use setData with merge: true to ensure the data gets added or updated for today's date
+        streakDocRef.setData([today: value], merge: true) { error in
+            if let error = error {
+                print("Error updating streak for today: \(error.localizedDescription)")
+            } else {
+                print("Streak updated successfully for today: \(today)")
+            }
+        }
+    }
+
+    // Function to return today's date
+    private func getFormattedDateForToday() -> String {
+        let formatter = DateFormatter()
+        formatter.dateFormat = "yyyy-MM-dd"
+        let today = Date() // This will always return today's date
+        return formatter.string(from: today)
+    }
+
 
     func getStreaksForUser(yearMonth: String, completion: @escaping (Streak?) -> Void) {
         let streakDocRef = db.collection("users").document(verifiedUserDocID).collection("streaks").document(yearMonth)
@@ -338,7 +363,7 @@ func updateStreakData(
 ) {
     //        guard let verifiedUserDocID = getCurrentUserID() else { return }
     
-    let coreRef = db.collection("users").document(verifiedUserDocID).collection("core").document("streakData")
+    let coreRef = db.collection("users").document(verifiedUserDocID).collection("streaksCore").document("streakData")
     
     coreRef.setData([
         "maxStreak": maxStreak,

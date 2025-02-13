@@ -9,6 +9,8 @@ import UIKit
 import SwiftUI
 
 class FamilyViewController: UIViewController {
+    var analyticsService: CoreAnalyticsService?
+    var sessionStartTime: Date?
     
     private let scrollView = UIScrollView()
     private let contentView = UIView()
@@ -35,9 +37,27 @@ class FamilyViewController: UIViewController {
         setupUI()
         applyGradientBackground()
         
+        if let verifiedUserDocID = UserDefaults.standard.string(forKey: Constants.UserDefaultsKeys.verifiedUserDocID) {
+            analyticsService = CoreAnalyticsService(verifiedUserDocID: Constants.UserDefaultsKeys.verifiedUserDocID)
+        }
+        
 //        dailyQuestionsVC.addQuestionsToFirestore()
     }
     
+    override func viewWillAppear(_ animated: Bool) {
+            super.viewWillAppear(animated)
+            sessionStartTime = Date()
+        }
+
+        override func viewWillDisappear(_ animated: Bool) {
+            super.viewWillDisappear(animated)
+            
+            if let startTime = sessionStartTime {
+                let sessionDuration = Date().timeIntervalSince(startTime) / 60
+                analyticsService?.trackTimeSpent(sessionDuration: sessionDuration, isFamily: true)
+            }
+        }
+
     private func setupNavigationBar() {
         let profileBarButton = UIBarButtonItem(customView: profileButton)
         navigationItem.rightBarButtonItem = profileBarButton

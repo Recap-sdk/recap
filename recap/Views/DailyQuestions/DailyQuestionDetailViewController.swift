@@ -17,7 +17,6 @@ class DailyQuestionDetailViewController: UIViewController, UITableViewDelegate, 
     private var lastFetchTime: Date?
     private let fetchInterval: TimeInterval = 86400.0
 
-    
     init(verifiedUserDocID: String) {
         self.verifiedUserDocID = verifiedUserDocID
         self.manager = QuestionsManager(verifiedUserDocID: verifiedUserDocID)
@@ -94,7 +93,7 @@ class DailyQuestionDetailViewController: UIViewController, UITableViewDelegate, 
     }
     
     // MARK: - Start Timer to Fetch Questions Every 24 Hours
-    private func startFetchingQuestions() {
+    func startFetchingQuestions() {
         if fetchTimer == nil { // Ensure only one timer runs
             // Schedule the timer to call fetchNewQuestions instead of loadQuestions
             fetchTimer = Timer.scheduledTimer(timeInterval: fetchInterval, target: self, selector: #selector(fetchNewQuestions), userInfo: nil, repeats: true)
@@ -107,13 +106,32 @@ class DailyQuestionDetailViewController: UIViewController, UITableViewDelegate, 
     @objc private func fetchNewQuestions() {
         self.manager.fetchQuestions { [weak self] (fetchedQuestions: [Question]) in
             guard let self = self else { return }
-            
+
             self.questions = fetchedQuestions
             self.lastFetchTime = Date() // Update fetch timestamp
+            
+            // Update the last fetched timestamp in Firestore
+            let db = Firestore.firestore()
+            let coreRef = db.collection("users")
+                              .document(self.verifiedUserDocID)
+                              .collection("core")
+                              .document("analytics")
+
+            coreRef.updateData([
+                "lastFetched": self.lastFetchTime ?? Date()
+            ]) { error in
+                if let error = error {
+                    print("❌ Error updating lastFetched timestamp: \(error.localizedDescription)")
+                } else {
+                    print("✅ lastFetched timestamp updated successfully.")
+                }
+            }
+
             self.tableView.reloadData() // Ensure the table view is reloaded
             print("✅ Questions successfully loaded.")
         }
     }
+
 
     // Load Questions from Firestore (No longer used in the timer selector)
     @objc func loadQuestions() {

@@ -367,9 +367,67 @@ class PatientQuestionsViewController: UIViewController {
                 self?.showNextQuestionConfirmation() // Go to the next available question after submitting the answer
             }
         }
+        let streakService = StreakService(verifiedUserDocID: verifiedUserDocID)
+           
+        
+        // Update streak for today
+        streakService.updateStreakForToday(with: true)
+
+        // Update 'lastAnswered' in the user's core analytics subcollection
+        let analyticsRef = db.collection("users").document(verifiedUserDocID).collection("core").document("analytics")
+        analyticsRef.updateData([
+            "lastAnswered": Date() // This will store the current timestamp for when the last answer was submitted
+        ]) { error in
+            if let error = error {
+                print("Error updating lastAnswered: \(error.localizedDescription)")
+            } else {
+                print("lastAnswered successfully updated")
+            }
+        }
+        
+        let streaksCoresRef = db.collection("users").document(verifiedUserDocID).collection("streaksCore").document("streakData")
+
+        streaksCoresRef.getDocument { document, error in
+            if let error = error {
+                print("Error fetching streak data: \(error.localizedDescription)")
+                return
+            }
+            
+            if let document = document, document.exists {
+                let data = document.data()
+                let maxStreak = data?["maxStreak"] as? Int ?? 0
+                let currentStreak = data?["currentStreak"] as? Int ?? 0
+                let lastAnsweredTimestamp = data?["lastAnswered"] as? Timestamp
+                let lastAnsweredDate = lastAnsweredTimestamp?.dateValue()
+                
+                let today = Calendar.current.startOfDay(for: Date())
+                let lastAnsweredDay = lastAnsweredDate.map { Calendar.current.startOfDay(for: $0) }
+                
+                // If lastAnswered date is already today, do not update
+                if lastAnsweredDay == today {
+                    print("✅ Streak already updated today. Skipping update.")
+                    return
+                }
+                
+                let updatedMaxStreak = max(currentStreak + 1, maxStreak) // Ensure maxStreak is correctly updated
+                
+                // Update the streak data
+                streaksCoresRef.updateData([
+                    "activeDays": FieldValue.increment(Int64(1)),
+                    "currentStreak": FieldValue.increment(Int64(1)),
+                    "maxStreak": updatedMaxStreak,
+                    "lastAnswered": Timestamp(date: Date())
+                ]) { error in
+                    if let error = error {
+                        print("Error updating streak data: \(error.localizedDescription)")
+                    } else {
+                        print("🔥 Streak data successfully updated!")
+                    }
+                }
+            }
+        }
+
     }
-
-
 
     private func submitAnswer(_ answer: String) {
         var currentQuestion = questions[currentQuestionIndex]

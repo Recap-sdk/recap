@@ -141,14 +141,6 @@ class UserDefaultsStorageFamilyMember: FamilyStorageProtocol {
         return members
     }
 
-//    func getFamilyMemberImage(for id: UUID) -> UIImage? {
-//        guard let imageDict = defaults.dictionary(forKey: Keys.familyImages) as? [String: Data],
-//              let imageData = imageDict[id.uuidString] else {
-//            return nil
-//        }
-//        return UIImage(data: imageData)
-//    }
-
     func clearFamilyData() {
         defaults.removeObject(forKey: Keys.familyMembers)
         defaults.removeObject(forKey: Keys.familyImages)

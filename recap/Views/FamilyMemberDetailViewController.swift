@@ -44,7 +44,7 @@ class FamilyMemberDetailViewController: UIViewController {
         let nameLabel = createNameLabel()
         let relationshipLabel = createRelationshipLabel()
         let phoneStack = createInfoStack(withIcon: "phone.fill", text: member.phone, color: .green)
-        let emailStack = createInfoStack(withIcon: "envelope.fill", text: "\(member.name.lowercased().replacingOccurrences(of: " ", with: ""))@example.com", color: .blue)
+        let emailStack = createInfoStack(withIcon: "envelope.fill", text: "\(member.email)", color: .blue)
 
         let callButton = createCallButton()
         callButton.widthAnchor.constraint(equalToConstant: 200).isActive = true

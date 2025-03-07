@@ -1,0 +1,9 @@
+/* 
+  Localizable.strings
+  recap
+
+  Created by Diptayan Jash on 11/02/25.
+  
+*/
+"choose_language" = "Choose Your Language";
+"language_subtitle" = "Select the language you prefer for the app interface";

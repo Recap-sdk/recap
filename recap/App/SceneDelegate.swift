@@ -17,38 +17,10 @@ class SceneDelegate: UIResponder, UIWindowSceneDelegate, PatientInfoDelegate {
     func scene(_ scene: UIScene, willConnectTo session: UISceneSession, options connectionOptions: UIScene.ConnectionOptions) {
         guard let windowScene = (scene as? UIWindowScene) else { return }
         let window = UIWindow(windowScene: windowScene)
-//        window.rootViewController = TabbarViewController()
         let launchVC = launchScreenViewController()
-        
-//        if UserDefaultsStorageProfile.shared.isLoggedIn() {
-//                // User is logged in, show the main tab bar controller
-//                let tabBarVC = TabbarViewController()
-//                window.rootViewController = tabBarVC
-//            } else {
-//                // User is not logged in, show the welcome screen
-//                let welcomeVC = WelcomeViewController()
-//                let navigationController = UINavigationController(rootViewController: welcomeVC)
-//                window.rootViewController = navigationController
-//            }
         window.rootViewController = launchVC
         self.window = window
         window.makeKeyAndVisible()
-
-//        let questionItem = UIApplicationShortcutItem(
-//            type: "daily-questions",
-//            localizedTitle: "Daily Questions",
-//            localizedSubtitle: "Answer today's questions",
-//            icon: UIApplicationShortcutIcon(systemImageName: "questionmark.circle.fill")
-//        )
-//        let familyItem = UIApplicationShortcutItem(
-//            type: "family-members",
-//            localizedTitle: "Family Members",
-//            localizedSubtitle: "View family members",
-//            icon: UIApplicationShortcutIcon(systemImageName: "person.3.fill")
-//            )
-//
-//
-//        UIApplication.shared.shortcutItems = [questionItem, familyItem]
     }
 
     func didCompleteProfile() {

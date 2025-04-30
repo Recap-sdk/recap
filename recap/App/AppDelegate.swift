@@ -7,8 +7,10 @@
 
 import UIKit
 import FirebaseAuth
+import Firebase
 import GoogleSignIn
 import FirebaseCore
+import FirebaseAnalytics
 import UserNotifications
 
 @main
@@ -19,6 +21,7 @@ class AppDelegate: UIResponder, UIApplicationDelegate, UNUserNotificationCenterD
         // Firebase Initialization
         FirebaseApp.configure()
         GIDSignIn.sharedInstance.restorePreviousSignIn()
+        Analytics.setAnalyticsCollectionEnabled(true) //Enable Analytics collection.
         
         // Set Notification Delegate
         let notificationCenter = UNUserNotificationCenter.current()

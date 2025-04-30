@@ -1,0 +1,9 @@
+/*
+  Localizable.strings
+  recap
+
+  Created by Diptayan Jash on 11/02/25.
+  
+*/
+"choose_language" = "আপনার ভাষা চয়ন করুন";
+"language_subtitle" = "অ্যাপ ইন্টারফেসের জন্য আপনার পছন্দের ভাষা নির্বাচন করুন";

@@ -2,7 +2,7 @@
 //  NotificationManager.swift
 //  recap
 //
-//  Created by user@47 on 04/02/25.
+//  Created by s1834 on 04/02/25.
 //
 
 import UserNotifications
@@ -93,8 +93,6 @@ class NotificationManager {
         UNUserNotificationCenter.current().add(request) { error in
             if let error = error {
                 print("❌❌ Failed to send welcome notification: \(error.localizedDescription)")
-            } else {
-                print("✅✅ Welcome notification sent!!")
             }
         }
     }
@@ -105,15 +103,13 @@ class NotificationManager {
         content.body = "New memory exercises are available!! Strengthen your mind right now."
         content.sound = .default
 
-        let trigger = UNTimeIntervalNotificationTrigger(timeInterval: 10800, repeats: true) // Every 3 hours
+        let trigger = UNTimeIntervalNotificationTrigger(timeInterval: 10800, repeats: true)
 
         let request = UNNotificationRequest(identifier: "questionReminder", content: content, trigger: trigger)
 
         UNUserNotificationCenter.current().add(request) { error in
             if let error = error {
                 print("❌❌ Failed to schedule recurring notification: \(error.localizedDescription)")
-            } else {
-                print("✅✅ Recurring notification scheduled every 3 hours!!")
             }
         }
     }

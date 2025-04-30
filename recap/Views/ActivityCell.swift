@@ -13,7 +13,7 @@ class ActivityCell: UITableViewCell {
     private let iconImageView: UIImageView = {
         let imageView = UIImageView()
         imageView.contentMode = .scaleAspectFit
-        imageView.layer.cornerRadius = 15
+        imageView.layer.cornerRadius = Constants.CardSize.DefaultCardCornerRadius
         imageView.clipsToBounds = true
         imageView.widthAnchor.constraint(equalToConstant: 100).isActive = true
         imageView.heightAnchor.constraint(equalToConstant: 100).isActive = true
@@ -55,7 +55,7 @@ class ActivityCell: UITableViewCell {
         super.init(style: style, reuseIdentifier: reuseIdentifier)
         selectionStyle = .none
 
-        contentView.layer.cornerRadius = 10
+        contentView.layer.cornerRadius = Constants.CardSize.DefaultCardCornerRadius
         contentView.layer.shadowColor = UIColor.black.cgColor
         contentView.layer.shadowOpacity = 0.1
         contentView.layer.shadowOffset = CGSize(width: 0, height: 2)

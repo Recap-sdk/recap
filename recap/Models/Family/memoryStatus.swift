@@ -2,7 +2,7 @@
 //  status.swift
 //  Recap
 //
-//  Created by admin70 on 30/11/24.
+//  Created by khushi on 30/11/24.
 //
 
 
@@ -15,8 +15,8 @@ enum MemoryStatus: String {
 }
 func calculateAverageStatus(correctAnswers: Int, incorrectAnswers: Int) -> (average: Double, status: MemoryStatus) {
     let totalAnswers = correctAnswers + incorrectAnswers
-    guard totalAnswers > 0 else { return (0.0, .declining) } // no division by 0
-
+    guard totalAnswers > 0 else { return (0.0, .declining) }
+    
     let average = (Double(correctAnswers) / Double(totalAnswers)) * 100
 
     let status: MemoryStatus

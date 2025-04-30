@@ -15,8 +15,9 @@ extension UIViewController {
             message: message,
             preferredStyle: .alert
         )
-        alert.addAction(UIAlertAction(title: "ok", style: .default) { _ in
-            self.dismiss(animated: true)
+        alert.addAction(UIAlertAction(title: actionTitle, style: .default) { _ in
+            // Only call completion if provided, don't dismiss the view controller
+            completion?()
         })
         present(alert, animated: true)
     }

@@ -8,7 +8,6 @@
 import FirebaseAuth
 import UIKit
 
-// MARK: - FamilyMemberDetails
 struct FamilyMemberDetails {
     let firstName: String
     let lastName: String
@@ -29,7 +28,6 @@ struct FamilyMemberDetails {
     }
 }
 
-// MARK: - RelationshipOptions
 enum RelationshipOptions: String, CaseIterable {
     case parent = "Parent"
     case sibling = "Sibling"
@@ -38,12 +36,10 @@ enum RelationshipOptions: String, CaseIterable {
     case other = "Other"
 }
 
-// MARK: - FamilyInfoDelegate
 protocol FamilyInfoDelegate: AnyObject {
     func didSaveFamilyMember(_ member: FamilyMemberDetails)
 }
 
-// MARK: - familyInfo class
 class familyInfo: UIViewController {
     weak var delegate: FamilyInfoDelegate?
 
@@ -59,7 +55,6 @@ class familyInfo: UIViewController {
         super.init(coder: coder)
     }
 
-    // MARK: - UI Components
     private let profileImageView: UIImageView = {
         let imageView = UIImageView()
         imageView.contentMode = .scaleAspectFill
@@ -90,12 +85,11 @@ class familyInfo: UIViewController {
         let button = UIButton()
         button.setTitle("Save", for: .normal)
         button.backgroundColor = .systemBlue
-        button.layer.cornerRadius = 8
+        button.layer.cornerRadius = Constants.CardSize.DefaultCardCornerRadius
         button.titleLabel?.font = .systemFont(ofSize: 17, weight: .semibold)
         return button
     }()
 
-    // MARK: - Properties
     private let imagePicker = UIImagePickerController()
     private let datePicker = UIDatePicker()
     private let relationshipPicker = UIPickerView()
@@ -104,17 +98,12 @@ class familyInfo: UIViewController {
     let relationshipOptions = RelationshipOptions.allCases.map { $0.rawValue }
     let bloodGroupOptions = BloodGroupOptions.allCases.map { $0.rawValue }
 
-    // MARK: - Lifecycle
     override func viewDidLoad() {
         title = "Add Family Member"
         super.viewDidLoad()
         setupUI()
-//        setupImagePicker()
-//        setupPickers()
-//        setupTextFields()
     }
 
-    // MARK: - Setup
     private func setupUI() {
         view.backgroundColor = .systemBackground
 
@@ -143,15 +132,10 @@ class familyInfo: UIViewController {
             saveButton.heightAnchor.constraint(equalToConstant: 50),
         ])
 
-//        let tapGesture = UITapGestureRecognizer(target: self, action: #selector(profileImageTapped))
-//        profileImageView.addGestureRecognizer(tapGesture)
-
         saveButton.addTarget(self, action: #selector(saveButtonTapped), for: .touchUpInside)
     }
 
-    // MARK: - Actions
     @objc private func saveButtonTapped() {
-        // Validate inputs
         guard let firstName = firstNameField.text, !firstName.isEmpty,
               let lastName = lastNameField.text, !lastName.isEmpty,
               let dob = dobField.text, !dob.isEmpty,
@@ -161,18 +145,12 @@ class familyInfo: UIViewController {
             return
         }
 
-        // Create family member details object
         guard let userId = Auth.auth().currentUser?.uid else {
             showAlert(message: "User not logged in.")
             return
         }
 
-        let familyMemberDetails = FamilyMemberDetails(firstName: firstName,
-                                                     lastName: lastName,
-                                                     dateOfBirth: dob,
-                                                     relationship: relationship,
-                                                     bloodGroup: bloodGroup,
-                                                     id: userId)
+        let familyMemberDetails = FamilyMemberDetails(firstName: firstName, lastName: lastName, dateOfBirth: dob, relationship: relationship, bloodGroup: bloodGroup, id: userId)
 
         // Save to UserDefaults
         UserDefaultsStorageProfile.shared.saveProfile(
@@ -180,7 +158,6 @@ class familyInfo: UIViewController {
             image: profileImageView.image
         ) { [weak self] success in
             if success {
-                // Notify delegate and pop the view
                 self?.delegate?.didSaveFamilyMember(familyMemberDetails)
                 self?.navigationController?.popViewController(animated: true)
             } else {
@@ -189,7 +166,6 @@ class familyInfo: UIViewController {
         }
     }
 
-    // MARK: - Helper Methods
     private func showAlert(message: String) {
         let alert = UIAlertController(title: "Error", message: message, preferredStyle: .alert)
         alert.addAction(UIAlertAction(title: "OK", style: .default))

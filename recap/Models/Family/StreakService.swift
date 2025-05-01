@@ -212,6 +212,7 @@ class StreakService {
             newAnsweredToday = true
         } else if daysSinceLastAnswer == 1 {
             newCurrentStreak += 1
+            newActiveDays += 1
             newAnsweredToday = true
         } else {
             newCurrentStreak = currentStreak
@@ -220,10 +221,6 @@ class StreakService {
         }
         
         newMaxStreak = max(newMaxStreak, newCurrentStreak)
-        
-        if !calendar.isDate(lastAnsweredDate, inSameDayAs: today) {
-            newActiveDays += 1
-        }
         
         updateStreakData(maxStreak: newMaxStreak, answeredToday: newAnsweredToday, currentStreak: newCurrentStreak, activeDays: newActiveDays, totalQuestionsAnswered: newTotalQuestionsAnswered, correctAnswers: newCorrectAnswers, longestBreak: newLongestBreak)
     }

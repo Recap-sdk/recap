@@ -172,24 +172,24 @@ class AddQuestionViewController: UIViewController, UIImagePickerControllerDelega
 //            badgeView.translatesAutoresizingMaskIntoConstraints = false
 //            badgeView.backgroundColor = AppColors.iconColor
 //            badgeView.layer.cornerRadius = 12
-//            
+//
 //            let numberLabel = UILabel()
 //            numberLabel.translatesAutoresizingMaskIntoConstraints = false
 //            numberLabel.text = "\(i)"
 //            numberLabel.textColor = .white
 //            numberLabel.font = UIFont.systemFont(ofSize: 12, weight: .bold)
 //            numberLabel.textAlignment = .center
-//            
+//
 //            badgeView.addSubview(numberLabel)
-//            
+//
 //            NSLayoutConstraint.activate([
 //                numberLabel.centerXAnchor.constraint(equalTo: badgeView.centerXAnchor),
 //                numberLabel.centerYAnchor.constraint(equalTo: badgeView.centerYAnchor)
 //            ])
-//            
+//
 //            textField.leftView = badgeView
 //            textField.leftViewMode = .always
-//            
+//
 //            NSLayoutConstraint.activate([
 //                badgeView.widthAnchor.constraint(equalToConstant: 24),
 //                badgeView.heightAnchor.constraint(equalToConstant: 24)

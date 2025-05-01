@@ -2,7 +2,7 @@
 //  CalenderCell.swift
 //  recap
 //
-//  Created by user@47 on 16/01/25.
+//  Created by s1834 on 16/01/25.
 //
 
 import UIKit
@@ -29,7 +29,6 @@ class CalendarCell: UICollectionViewCell {
         ])
     }
 
-    // Customize the appearance of the cell
     func configure(withDay day: String?, isSelected: Bool, isCurrentDay: Bool) {
         if let day = day {
             dayLabel.text = day
@@ -39,8 +38,6 @@ class CalendarCell: UICollectionViewCell {
             dayLabel.text = ""
             contentView.backgroundColor = .clear
         }
-
-        // Highlight the selected day
         if isSelected {
             contentView.backgroundColor = UIColor.systemBlue
             dayLabel.textColor = .white
@@ -49,7 +46,6 @@ class CalendarCell: UICollectionViewCell {
             dayLabel.textColor = .black
         }
         
-        // Add border to current day
         if isCurrentDay {
             contentView.layer.borderColor = UIColor.systemGreen.cgColor
         } else {

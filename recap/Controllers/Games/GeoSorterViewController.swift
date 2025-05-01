@@ -1,3 +1,5 @@
+import AudioToolbox
+import Foundation
 import UIKit
 
 class GeoSorterViewController: UIViewController {
@@ -5,374 +7,507 @@ class GeoSorterViewController: UIViewController {
     private var locations = [
         "City": ["Paris", "Tokyo", "Mumbai", "New York", "Sydney"],
         "State": ["California", "Texas", "Florida", "Gujarat", "Victoria"],
-        "Country": ["France", "Japan", "India", "USA", "Australia"]
+        "Country": ["France", "Japan", "India", "USA", "Australia"],
     ]
-    
+
     private var score = 0
-    private var answeredWords: [String: String] = [:]
+    private var feedback: String = ""
+    private var incorrectAttempts = 0
+
+    private var timer: Timer?
+    private var secondsElapsed = 0
+    private var moves = 0
 
     private let subtitleLabel: UILabel = {
         let label = UILabel()
         label.font = .systemFont(ofSize: 16)
-        label.textColor = .gray
+        label.textColor = .secondaryLabel
         label.numberOfLines = 0
-        label.text = "Place the City, State and Country in correct group"
+        label.text = "Drag each location to its correct category"
         return label
     }()
-    
-    private let scoreLabel: UILabel = {
+
+    private let statsView: UIView = {
+        let view = UIView()
+        view.backgroundColor = AppColors.primaryButtonColor
+        view.layer.cornerRadius = 12
+        return view
+    }()
+
+    private let timeLabel: UILabel = {
         let label = UILabel()
-        label.font = .boldSystemFont(ofSize: 28)
-        label.textColor = .systemIndigo
-        label.text = "Score: 0"
+        label.font = .systemFont(ofSize: 18, weight: .medium)
+        label.textColor = AppColors.secondaryButtonTextColor
+        label.text = "Time: 0s"
         return label
     }()
-    
+
+    private let movesLabel: UILabel = {
+        let label = UILabel()
+        label.font = .systemFont(ofSize: 18, weight: .medium)
+        label.textColor = AppColors.secondaryButtonTextColor
+        label.text = "Moves: 0"
+        return label
+    }()
+
     private lazy var categoryStacks: [CategoryStackView] = categories.map { category in
         let stackView = CategoryStackView(title: category)
+        stackView.delegate = self
         return stackView
     }
-    
+
     private let wordsContainer: UIView = {
         let view = UIView()
-        view.backgroundColor = .white
-        view.layer.cornerRadius = 16
+        view.backgroundColor = AppColors.cardBackgroundColor
+        view.layer.cornerRadius = 12
         view.layer.shadowColor = UIColor.black.cgColor
         view.layer.shadowOpacity = 0.1
         view.layer.shadowOffset = CGSize(width: 0, height: 2)
-        view.layer.shadowRadius = 4
+        view.layer.shadowRadius = 6
         return view
     }()
-    
-    private let wordsStackView: UIStackView = {
-        let stackView = UIStackView()
-        stackView.axis = .vertical
-        stackView.spacing = 15
-        stackView.alignment = .fill
-        stackView.distribution = .fillEqually
-        return stackView
+
+    private let wordsCollectionView: UICollectionView = {
+        let layout = UICollectionViewFlowLayout()
+        layout.scrollDirection = .vertical
+        layout.minimumInteritemSpacing = 10
+        layout.minimumLineSpacing = 10
+
+        let collectionView = UICollectionView(frame: .zero, collectionViewLayout: layout)
+        collectionView.backgroundColor = .clear
+        collectionView.register(WordCell.self, forCellWithReuseIdentifier: WordCell.identifier)
+        collectionView.contentInset = UIEdgeInsets(top: 16, left: 16, bottom: 16, right: 16)
+        return collectionView
     }()
-    
+
     override func viewDidLoad() {
         super.viewDidLoad()
-        title = "Word Game"
-        view.backgroundColor = .systemBackground
-        applyGradientBackground()
+        title = "GeoSorter"
         setupUI()
+        setupCollectionView()
         populateWords()
+        startTimer() // Start the timer when the view loads
     }
-    
-    
-    private func applyGradientBackground() {
-        let gradientLayer = CAGradientLayer()
-        gradientLayer.colors = [
-            UIColor(red: 0.69, green: 0.88, blue: 0.88, alpha: 1.0).cgColor,
-            UIColor(red: 0.94, green: 0.74, blue: 0.80, alpha: 1.0).cgColor
-        ]
-        gradientLayer.startPoint = CGPoint(x: 0, y: 0)
-        gradientLayer.endPoint = CGPoint(x: 1, y: 1)
-        gradientLayer.frame = view.bounds
-        view.layer.insertSublayer(gradientLayer, at: 0)
-    }
-    
+
     private func setupUI() {
-        [scoreLabel, wordsContainer].forEach {
+        view.backgroundColor = .systemBackground
+
+        [subtitleLabel, statsView, wordsContainer].forEach {
             view.addSubview($0)
             $0.translatesAutoresizingMaskIntoConstraints = false
         }
-        
-        wordsContainer.addSubview(wordsStackView)
-        wordsStackView.translatesAutoresizingMaskIntoConstraints = false
-        
+
+        // Create a horizontal stack view for time and moves
+        let statsStack = UIStackView(arrangedSubviews: [timeLabel, movesLabel])
+        statsStack.axis = .horizontal
+        statsStack.distribution = .equalSpacing
+        statsStack.spacing = 20
+        statsStack.translatesAutoresizingMaskIntoConstraints = false
+
+        statsView.addSubview(statsStack)
+
+        wordsContainer.addSubview(wordsCollectionView)
+        wordsCollectionView.translatesAutoresizingMaskIntoConstraints = false
+
         let categoriesStack = UIStackView(arrangedSubviews: categoryStacks)
         categoriesStack.axis = .horizontal
         categoriesStack.distribution = .fillEqually
-        categoriesStack.spacing = 20
+        categoriesStack.spacing = 12
         categoriesStack.translatesAutoresizingMaskIntoConstraints = false
-        
+
         view.addSubview(categoriesStack)
-        view.addSubview(subtitleLabel)
-        
-        subtitleLabel.translatesAutoresizingMaskIntoConstraints = false
-        
+
         NSLayoutConstraint.activate([
-            subtitleLabel.topAnchor.constraint(equalTo: view.safeAreaLayoutGuide.topAnchor, constant: 24),
+            subtitleLabel.topAnchor.constraint(equalTo: view.safeAreaLayoutGuide.topAnchor, constant: 8),
             subtitleLabel.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: 24),
             subtitleLabel.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -24),
-            
-            scoreLabel.topAnchor.constraint(equalTo: subtitleLabel.bottomAnchor, constant: 16),
-            scoreLabel.centerXAnchor.constraint(equalTo: view.centerXAnchor),
-            
-            categoriesStack.topAnchor.constraint(equalTo: scoreLabel.bottomAnchor, constant: 20),
-            categoriesStack.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: 20),
-            categoriesStack.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -20),
-            categoriesStack.heightAnchor.constraint(equalToConstant: 200),
-            
-            wordsContainer.topAnchor.constraint(equalTo: categoriesStack.bottomAnchor, constant: 20),
-            wordsContainer.leadingAnchor.constraint(equalTo: view.safeAreaLayoutGuide.leadingAnchor, constant: 20),
-            wordsContainer.trailingAnchor.constraint(equalTo: view.safeAreaLayoutGuide.trailingAnchor, constant: -20),
-            wordsContainer.bottomAnchor.constraint(equalTo: view.safeAreaLayoutGuide.bottomAnchor, constant: -20),
-            
-            wordsStackView.topAnchor.constraint(equalTo: wordsContainer.topAnchor, constant: 16),
-            wordsStackView.leadingAnchor.constraint(equalTo: wordsContainer.leadingAnchor, constant: 16),
-            wordsStackView.trailingAnchor.constraint(equalTo: wordsContainer.trailingAnchor, constant: -16),
-            wordsStackView.bottomAnchor.constraint(equalTo: wordsContainer.bottomAnchor, constant: -16)
+
+            statsView.topAnchor.constraint(equalTo: subtitleLabel.bottomAnchor, constant: 20),
+            statsView.centerXAnchor.constraint(equalTo: view.centerXAnchor),
+            statsView.widthAnchor.constraint(equalToConstant: 240),
+            statsView.heightAnchor.constraint(equalToConstant: 60),
+
+            statsStack.centerXAnchor.constraint(equalTo: statsView.centerXAnchor),
+            statsStack.centerYAnchor.constraint(equalTo: statsView.centerYAnchor),
+            statsStack.leadingAnchor.constraint(equalTo: statsView.leadingAnchor, constant: 20),
+            statsStack.trailingAnchor.constraint(equalTo: statsView.trailingAnchor, constant: -20),
+
+            categoriesStack.topAnchor.constraint(equalTo: statsView.bottomAnchor, constant: 24),
+            categoriesStack.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: 16),
+            categoriesStack.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -16),
+
+            wordsContainer.topAnchor.constraint(equalTo: categoriesStack.bottomAnchor, constant: 24),
+            wordsContainer.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: 16),
+            wordsContainer.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -16),
+            wordsContainer.bottomAnchor.constraint(equalTo: view.safeAreaLayoutGuide.bottomAnchor, constant: -16),
+
+            wordsCollectionView.topAnchor.constraint(equalTo: wordsContainer.topAnchor),
+            wordsCollectionView.leadingAnchor.constraint(equalTo: wordsContainer.leadingAnchor),
+            wordsCollectionView.trailingAnchor.constraint(equalTo: wordsContainer.trailingAnchor),
+            wordsCollectionView.bottomAnchor.constraint(equalTo: wordsContainer.bottomAnchor),
         ])
     }
-    
+
+    private func setupCollectionView() {
+        wordsCollectionView.dataSource = self
+        wordsCollectionView.delegate = self
+        wordsCollectionView.dragDelegate = self
+    }
+
     private func populateWords() {
-        wordsStackView.arrangedSubviews.forEach { $0.removeFromSuperview() }
-        
-        let rowStack1 = createHorizontalWordStack()
-        let rowStack2 = createHorizontalWordStack()
-        let rowStack3 = createHorizontalWordStack()
-        
-        wordsStackView.addArrangedSubview(rowStack1)
-        wordsStackView.addArrangedSubview(rowStack2)
-        wordsStackView.addArrangedSubview(rowStack3)
-        
+        // Choose all words for a single round
         var allWords: [(word: String, category: String)] = []
         for (category, words) in locations {
-            words.forEach { allWords.append(($0, category)) }
+            for word in words {
+                allWords.append((word, category))
+            }
         }
+
         allWords.shuffle()
-        
-        let wordsPerRow = 4
-        for (index, wordInfo) in allWords.enumerated() {
-            let row = index / wordsPerRow
-            let wordLabel = createWordLabel(for: wordInfo.word, category: wordInfo.category)
-            
-            wordLabel.widthAnchor.constraint(greaterThanOrEqualToConstant: 60).isActive = true
-            
-            switch row {
-            case 0: rowStack1.addArrangedSubview(wordLabel)
-            case 1: rowStack2.addArrangedSubview(wordLabel)
-            case 2: rowStack3.addArrangedSubview(wordLabel)
-            default: break
+
+        // Take 5 words from each category for a balanced gameplay
+        var selectedWords: [(word: String, category: String)] = []
+        var countPerCategory = [String: Int]()
+
+        for word in allWords where selectedWords.count < 10 {
+            let category = word.category
+            let count = countPerCategory[category] ?? 0
+
+            // Take maximum 5 words per category
+            if count < 5 {
+                selectedWords.append(word)
+                countPerCategory[category] = count + 1
             }
         }
+
+        currentWords = selectedWords
+        wordsCollectionView.reloadData()
     }
-    
-    private func createHorizontalWordStack() -> UIStackView {
-        let stack = UIStackView()
-        stack.axis = .horizontal
-        stack.spacing = 8
-        stack.distribution = .fillProportionally
-        stack.alignment = .center
-    
-        stack.layoutMargins = UIEdgeInsets(top: 0, left: 8, bottom: 0, right: 8)
-        stack.isLayoutMarginsRelativeArrangement = true
-        
-        return stack
-    }
-    
-    private func createWordLabel(for word: String, category: String) -> UILabel {
-        let label = UILabel()
-        label.text = word
-        label.font = .systemFont(ofSize: 16, weight: .semibold)
-        label.textAlignment = .center
-        label.backgroundColor = .systemIndigo.withAlphaComponent(0.1)
-        label.layer.cornerRadius = 12
-        label.layer.borderWidth = 1.5
-        label.layer.borderColor = UIColor.systemIndigo.cgColor
-        label.layer.masksToBounds = true
-        label.isUserInteractionEnabled = true
-        label.tag = category.hashValue
-        
-        label.adjustsFontSizeToFitWidth = true
-        label.minimumScaleFactor = 0.7
-        label.numberOfLines = 1
-        
-        label.setContentHuggingPriority(.required, for: .horizontal)
-        label.setContentCompressionResistancePriority(.required, for: .horizontal)
-        
-        label.directionalLayoutMargins = NSDirectionalEdgeInsets(top: 8, leading: 12, bottom: 8, trailing: 12)
-        
-        label.heightAnchor.constraint(equalToConstant: 40).isActive = true
-        
-        let tap = UITapGestureRecognizer(target: self, action: #selector(wordTapped(_:)))
-        label.addGestureRecognizer(tap)
-        return label
-    }
-    
-    @objc private func wordTapped(_ sender: UITapGestureRecognizer) {
-        guard let label = sender.view as? UILabel,
-              let word = label.text else { return }
-        
-        let correctCategory = categories.first { $0.hashValue == label.tag } ?? ""
-        presentCategoryChoice(for: word, correctCategory: correctCategory, label: label)
-    }
-    
-    private func presentCategoryChoice(for word: String, correctCategory: String, label: UILabel) {
-        let alert = UIAlertController(
-            title: "Where does \(word) belong?",
-            message: "Select the correct category",
-            preferredStyle: .alert
-        )
-        
-        for category in categories {
-            let action = UIAlertAction(title: category, style: .default) { [weak self] _ in
-                self?.checkAnswer(word: word, chosenCategory: category, correctCategory: correctCategory, label: label)
-            }
-            alert.addAction(action)
-        }
-        
-        alert.addAction(UIAlertAction(title: "Cancel", style: .cancel))
-        
-        present(alert, animated: true)
-    }
-    
-    private func checkAnswer(word: String, chosenCategory: String, correctCategory: String, label: UILabel) {
-        answeredWords[word] = chosenCategory
-        let isCorrect = chosenCategory == correctCategory
-        
-        if isCorrect {
+
+    private var currentWords: [(word: String, category: String)] = []
+
+    private func updateScore(increase: Bool, feedback: String) {
+        if increase {
+            // Increase score by 10 points for each correct match
             score += 10
-            scoreLabel.text = "Score: \(score)"
-            
-            if let categoryStack = categoryStacks.first(where: { $0.category == correctCategory }) {
-                let finalFrame = categoryStack.containerView.convert(categoryStack.containerView.bounds, to: view)
-                
-                let animatingLabel = UILabel(frame: label.convert(label.bounds, to: view))
-                animatingLabel.text = word
-                animatingLabel.font = label.font
-                animatingLabel.textAlignment = .center
-                animatingLabel.backgroundColor = label.backgroundColor
-                animatingLabel.layer.cornerRadius = label.layer.cornerRadius
-                animatingLabel.layer.masksToBounds = true
-                view.addSubview(animatingLabel)
-                
-                UIView.animate(withDuration: 0.5, delay: 0, options: .curveEaseInOut) {
-                    animatingLabel.frame = CGRect(
-                        x: finalFrame.midX - 50,
-                        y: finalFrame.minY + 10,
-                        width: 100,
-                        height: 40
-                    )
-                } completion: { _ in
-                    // Remove the animating label
-                    animatingLabel.removeFromSuperview()
-                    // Add word to category stack
-                    categoryStack.addWord(word)
-                    
-                    // Replace the word in the original position
-                    self.replaceWord(at: label)
+
+            let generator = UIImpactFeedbackGenerator(style: .light)
+            generator.impactOccurred()
+            UIView.animate(withDuration: 0.2, animations: {
+                self.statsView.transform = CGAffineTransform(scaleX: 1.05, y: 1.05)
+            }) { _ in
+                UIView.animate(withDuration: 0.1) {
+                    self.statsView.transform = .identity
                 }
-                
-                // Fade out the original label
-                UIView.animate(withDuration: 0.3) {
-                    label.alpha = 0
-                } completion: { _ in
-                    label.removeFromSuperview()
-                }
-                
             }
         } else {
-            label.backgroundColor = .systemRed.withAlphaComponent(0.3)
-            label.shake()
-            
-            // Reset background color after delay
-            DispatchQueue.main.asyncAfter(deadline: .now() + 0.8) {
-                UIView.animate(withDuration: 0.3) {
-                    label.backgroundColor = .systemIndigo.withAlphaComponent(0.1)
-                }
+            incorrectAttempts += 1
+            if incorrectAttempts >= 4 {
+                showHintAlert()
+                incorrectAttempts = 0
             }
-        }
-    }
-    
-    private func replaceWord(at label: UILabel) {
-        // Get all unused words
-        var unusedWords: [(word: String, category: String)] = []
-        for (category, words) in locations {
-            words.forEach { word in
-                if answeredWords[word] == nil {
-                    unusedWords.append((word, category))
-                }
-            }
-        }
-        
-        // If there are unused words, randomly select one
-        if let newWord = unusedWords.randomElement() {
-            let newLabel = createWordLabel(for: newWord.word, category: newWord.category)
-            
-            // Get the stack view that contained the old label
-            if let stackView = label.superview as? UIStackView {
-                // Add new label with fade in animation
-                newLabel.alpha = 0
-                stackView.addArrangedSubview(newLabel)
-                
-                UIView.animate(withDuration: 0.3) {
-                    newLabel.alpha = 1
-                }
-            }
-        }
-    }
-    
-    private func createCategoryContainer(title: String) -> UIView {
-        let container = UIView()
-        container.backgroundColor = .systemGray6
-        container.layer.cornerRadius = 12
-        container.layer.borderColor = UIColor.systemGray4.cgColor
-        container.layer.borderWidth = 1
-
-        let titleLabel = UILabel()
-        titleLabel.text = title
-        titleLabel.font = .boldSystemFont(ofSize: 18)
-        titleLabel.textColor = .darkGray
-        titleLabel.textAlignment = .center
-        
-        let stackView = UIStackView()
-        stackView.axis = .vertical
-        stackView.spacing = 8
-        stackView.distribution = .fillEqually
-        stackView.alignment = .fill
-        
-        // Add rows of empty labels to represent placeholders
-        for _ in 0..<2 { // Two rows
-            let rowStack = UIStackView()
-            rowStack.axis = .horizontal
-            rowStack.spacing = 8
-            rowStack.distribution = .fillEqually
-            for _ in 0..<4 { // Four columns
-                let placeholderLabel = UILabel()
-                placeholderLabel.backgroundColor = .white
-                placeholderLabel.layer.cornerRadius = 8
-                placeholderLabel.clipsToBounds = true
-                rowStack.addArrangedSubview(placeholderLabel)
-            }
-            stackView.addArrangedSubview(rowStack)
+            let generator = UIImpactFeedbackGenerator(style: .medium)
+            generator.impactOccurred()
         }
 
-        // Layout
-        container.addSubview(titleLabel)
-        container.addSubview(stackView)
-        
-        titleLabel.translatesAutoresizingMaskIntoConstraints = false
-        stackView.translatesAutoresizingMaskIntoConstraints = false
+        self.feedback = feedback
+    }
+
+    private func checkGameStatus() {
+        if currentWords.isEmpty {
+            gameCompleted()
+        }
+    }
+
+    private func startTimer() {
+        timer = Timer.scheduledTimer(timeInterval: 1.0, target: self, selector: #selector(updateTimer), userInfo: nil, repeats: true)
+    }
+
+    @objc private func startNewGame() {
+        // Reset game state
+        secondsElapsed = 0
+        moves = 0
+        score = 0
+        incorrectAttempts = 0
+
+        // Update UI
+        timeLabel.text = "Time: 0s"
+        movesLabel.text = "Moves: 0"
+
+        // Clear category stacks
+        categoryStacks.forEach { stackView in
+            // Remove all arranged subviews from the wordsStack
+            for view in stackView.wordsStack.arrangedSubviews {
+                stackView.wordsStack.removeArrangedSubview(view)
+                view.removeFromSuperview()
+            }
+
+            // Reset empty state label
+            stackView.emptyStateLabel.isHidden = false
+        }
+
+        // Populate new words
+        populateWords()
+
+        // Start timer
+        timer?.invalidate()
+        timer = Timer.scheduledTimer(timeInterval: 1, target: self, selector: #selector(updateTimer), userInfo: nil, repeats: true)
+
+        // Provide feedback for a new game
+        feedback = "Match locations to their categories"
+
+        // Announce new game started for accessibility
+        UIAccessibility.post(notification: .announcement, argument: "New game started. Sort locations into their correct categories.")
+    }
+
+    private func gameCompleted() {
+        timer?.invalidate()
+        let notificationGenerator = UINotificationFeedbackGenerator()
+        notificationGenerator.notificationOccurred(.success)
+
+        let impactGenerator = UIImpactFeedbackGenerator(style: .heavy)
+        impactGenerator.impactOccurred()
+
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.2) {
+            let lightImpact = UIImpactFeedbackGenerator(style: .light)
+            lightImpact.impactOccurred()
+        }
+
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.4) {
+            let mediumImpact = UIImpactFeedbackGenerator(style: .medium)
+            mediumImpact.impactOccurred()
+        }
+        AudioServicesPlaySystemSound(1025)
+
+        UIView.animate(withDuration: 0.3, animations: {
+            self.view.transform = CGAffineTransform(scaleX: 1.1, y: 1.1)
+        }) { _ in
+            UIView.animate(withDuration: 0.3, animations: {
+                self.view.transform = CGAffineTransform.identity
+            })
+        }
+
+        // Delay presenting the completion screen
+        DispatchQueue.main.asyncAfter(deadline: .now() + 1.0) {
+            let completionVC = GameCompletionViewController()
+            completionVC.secondsElapsed = self.secondsElapsed
+            completionVC.moves = self.moves
+            completionVC.score = self.score
+            completionVC.modalPresentationStyle = .overFullScreen
+            completionVC.modalTransitionStyle = .crossDissolve
+
+            completionVC.onPlayAgainTapped = { [weak self] in
+                self?.startNewGame()
+            }
+
+            completionVC.onExitTapped = {
+                self.navigationController?.popViewController(animated: true)
+            }
+
+            self.present(completionVC, animated: true, completion: nil)
+
+            // Accessibility announcement
+            UIAccessibility.post(notification: .announcement, argument: "Congratulations! You completed the game!")
+        }
+    }
+
+    @objc private func updateTimer() {
+        secondsElapsed += 1
+        timeLabel.text = "Time: \(secondsElapsed)s"
+    }
+
+    // Increment moves when a move is made
+    private func incrementMoves() {
+        moves += 1
+        movesLabel.text = "Moves: \(moves)"
+    }
+
+    private func showHintAlert() {
+        let alertController = UIAlertController(
+            title: "Need a hint?",
+            message: "Remember: Cities are urban areas (like Tokyo), States are subdivisions of countries (like California), and Countries are sovereign nations (like France).",
+            preferredStyle: .alert
+        )
+
+        let okAction = UIAlertAction(title: "Got it", style: .default)
+        alertController.addAction(okAction)
+        present(alertController, animated: true)
+    }
+
+    private func resetGame() {
+        score = 0
+        moves = 0
+        secondsElapsed = 0
+        incorrectAttempts = 0
+        timeLabel.text = "Time: 0s"
+        movesLabel.text = "Moves: 0"
+        updateScore(increase: false, feedback: "Match locations to their categories")
+
+        // Clear category stacks
+        categoryStacks.forEach { stackView in
+            // Remove all arranged subviews from the wordsStack
+            for view in stackView.wordsStack.arrangedSubviews {
+                stackView.wordsStack.removeArrangedSubview(view)
+                view.removeFromSuperview()
+            }
+
+            // Reset empty state label
+            stackView.emptyStateLabel.isHidden = false
+        }
+
+        populateWords()
+    }
+
+    private func removeWord(_ word: String) {
+        if let index = currentWords.firstIndex(where: { $0.word == word }) {
+            currentWords.remove(at: index)
+            wordsCollectionView.reloadData()
+            checkGameStatus()
+        }
+    }
+
+    // Method to verify if a word belongs to a category
+    private func isCorrectCategory(word: String, category: String) -> Bool {
+        guard let correctCategory = locations.first(where: { $0.value.contains(word) })?.key else {
+            return false
+        }
+        return correctCategory == category
+    }
+}
+
+// MARK: - UICollectionViewDataSource
+
+extension GeoSorterViewController: UICollectionViewDataSource {
+    func collectionView(_ collectionView: UICollectionView, numberOfItemsInSection section: Int) -> Int {
+        return currentWords.count
+    }
+
+    func collectionView(_ collectionView: UICollectionView, cellForItemAt indexPath: IndexPath) -> UICollectionViewCell {
+        guard let cell = collectionView.dequeueReusableCell(withReuseIdentifier: WordCell.identifier, for: indexPath) as? WordCell else {
+            return UICollectionViewCell()
+        }
+
+        let word = currentWords[indexPath.item].word
+        cell.configure(with: word)
+        return cell
+    }
+}
+
+// MARK: - UICollectionViewDelegateFlowLayout
+
+extension GeoSorterViewController: UICollectionViewDelegateFlowLayout {
+    func collectionView(_ collectionView: UICollectionView, layout collectionViewLayout: UICollectionViewLayout, sizeForItemAt indexPath: IndexPath) -> CGSize {
+        let width = (collectionView.bounds.width - 42) / 3 // 3 columns with spacing
+        return CGSize(width: width, height: 50)
+    }
+}
+
+// MARK: - UICollectionViewDragDelegate
+
+extension GeoSorterViewController: UICollectionViewDragDelegate {
+    func collectionView(_ collectionView: UICollectionView, itemsForBeginning session: UIDragSession, at indexPath: IndexPath) -> [UIDragItem] {
+        let word = currentWords[indexPath.item].word
+        let itemProvider = NSItemProvider(object: word as NSString)
+        let dragItem = UIDragItem(itemProvider: itemProvider)
+        dragItem.localObject = word
+        return [dragItem]
+    }
+}
+
+// MARK: - CategoryStackViewDelegate
+
+extension GeoSorterViewController: CategoryStackViewDelegate {
+    func categoryStackView(_ stackView: CategoryStackView, didReceiveDropWith word: String, category: String) {
+        incrementMoves() // Increment moves on each attempt
+        let isCorrect = isCorrectCategory(word: word, category: category)
+
+        if isCorrect {
+            stackView.addWord(word)
+
+            removeWord(word)
+            updateScore(increase: true, feedback: "Correct! \(word) is a \(category).")
+        } else {
+            // Find correct category
+            if let correctCategory = locations.first(where: { $0.value.contains(word) })?.key {
+                updateScore(increase: false, feedback: "\(word) is a \(correctCategory), not a \(category).")
+            }
+
+            UIView.animate(withDuration: 0.1, animations: {
+                stackView.transform = CGAffineTransform(translationX: 10, y: 0)
+            }, completion: { _ in
+                UIView.animate(withDuration: 0.1, animations: {
+                    stackView.transform = CGAffineTransform(translationX: -10, y: 0)
+                }, completion: { _ in
+                    UIView.animate(withDuration: 0.1) {
+                        stackView.transform = .identity
+                    }
+                })
+            })
+        }
+    }
+}
+
+// MARK: - WordCell
+
+class WordCell: UICollectionViewCell {
+    static let identifier = "WordCell"
+
+    private let wordLabel: UILabel = {
+        let label = UILabel()
+        label.font = .systemFont(ofSize: 16, weight: .medium)
+        label.textAlignment = .center
+        label.textColor = .label
+        return label
+    }()
+
+    private let containerView: UIView = {
+        let view = UIView()
+        view.backgroundColor = AppColors.primaryButtonColor
+        view.layer.cornerRadius = 8
+        view.layer.borderWidth = 1
+        view.layer.borderColor = AppColors.iconColor.cgColor
+        return view
+    }()
+
+    override init(frame: CGRect) {
+        super.init(frame: frame)
+        setupUI()
+    }
+
+    required init?(coder: NSCoder) {
+        fatalError("init(coder:) has not been implemented")
+    }
+
+    private func setupUI() {
+        contentView.addSubview(containerView)
+        containerView.addSubview(wordLabel)
+
+        containerView.translatesAutoresizingMaskIntoConstraints = false
+        wordLabel.translatesAutoresizingMaskIntoConstraints = false
 
         NSLayoutConstraint.activate([
-            titleLabel.topAnchor.constraint(equalTo: container.topAnchor, constant: 8),
-            titleLabel.centerXAnchor.constraint(equalTo: container.centerXAnchor),
-            stackView.topAnchor.constraint(equalTo: titleLabel.bottomAnchor, constant: 8),
-            stackView.leadingAnchor.constraint(equalTo: container.leadingAnchor, constant: 8),
-            stackView.trailingAnchor.constraint(equalTo: container.trailingAnchor, constant: -8),
-            stackView.bottomAnchor.constraint(equalTo: container.bottomAnchor, constant: -8)
+            containerView.topAnchor.constraint(equalTo: contentView.topAnchor, constant: 4),
+            containerView.leadingAnchor.constraint(equalTo: contentView.leadingAnchor, constant: 4),
+            containerView.trailingAnchor.constraint(equalTo: contentView.trailingAnchor, constant: -4),
+            containerView.bottomAnchor.constraint(equalTo: contentView.bottomAnchor, constant: -4),
+
+            wordLabel.centerXAnchor.constraint(equalTo: containerView.centerXAnchor),
+            wordLabel.centerYAnchor.constraint(equalTo: containerView.centerYAnchor),
+            wordLabel.leadingAnchor.constraint(greaterThanOrEqualTo: containerView.leadingAnchor, constant: 8),
+            wordLabel.trailingAnchor.constraint(lessThanOrEqualTo: containerView.trailingAnchor, constant: -8),
         ])
-        
-        return container
+    }
+
+    func configure(with word: String) {
+        wordLabel.text = word
+    }
+
+    override func prepareForReuse() {
+        super.prepareForReuse()
+        wordLabel.text = nil
     }
 }
 
-extension UIView {
-    func shake() {
-        let animation = CAKeyframeAnimation(keyPath: "transform.translation.x")
-        animation.timingFunction = CAMediaTimingFunction(name: .linear)
-        animation.duration = 0.4
-        animation.values = [-10.0, 10.0, -10.0, 10.0, -5.0, 5.0, -2.5, 2.5, 0.0]
-        layer.add(animation, forKey: "shake")
-    }
-}
-
-#Preview(){
+#Preview {
     GeoSorterViewController()
 }

@@ -2,7 +2,7 @@
 //  ArticlesDataModel.swift
 //  Recap
 //
-//  Created by admin70 on 05/11/24.
+//  Created by khushi on 05/11/24.
 //
 
 import UIKit

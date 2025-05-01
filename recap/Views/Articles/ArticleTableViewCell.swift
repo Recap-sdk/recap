@@ -13,11 +13,13 @@ class ArticleTableViewCell: UITableViewCell {
     private let containerView: UIView = {
         let view = UIView()
         view.backgroundColor = .white
-        view.layer.cornerRadius = 10
-        view.layer.shadowColor = UIColor.black.cgColor
-        view.layer.shadowOpacity = 0.2
-        view.layer.shadowOffset = CGSize(width: 0, height: 2)
-        view.layer.shadowRadius = 5
+        view.layer.cornerRadius = Constants.CardSize.DefaultCardCornerRadius
+        view.layer.shadowColor = Constants.FontandColors.defaultshadowColor
+        view.layer.shadowOpacity = Float(
+            Constants.FontandColors.defaultshadowOpacity
+        )
+        view.layer.shadowOffset = Constants.FontandColors.defaultshadowOffset
+        view.layer.shadowRadius = Constants.FontandColors.defaultshadowRadius
         view.translatesAutoresizingMaskIntoConstraints = false
         return view
     }()
@@ -25,7 +27,7 @@ class ArticleTableViewCell: UITableViewCell {
     private let articleImageView: UIImageView = {
         let imageView = UIImageView()
         imageView.contentMode = .scaleAspectFill
-        imageView.layer.cornerRadius = 10
+        imageView.layer.cornerRadius = Constants.CardSize.DefaultCardCornerRadius
         imageView.clipsToBounds = true
         imageView.translatesAutoresizingMaskIntoConstraints = false
         return imageView
@@ -33,7 +35,7 @@ class ArticleTableViewCell: UITableViewCell {
 
     private let titleLabel: UILabel = {
         let label = UILabel()
-        label.font = UIFont.boldSystemFont(ofSize: 16)
+        label.font = Constants.FontandColors.titleFont
         label.numberOfLines = 0
         label.translatesAutoresizingMaskIntoConstraints = false
         return label
@@ -41,9 +43,9 @@ class ArticleTableViewCell: UITableViewCell {
 
     private let subtitleLabel: UILabel = {
         let label = UILabel()
-        label.font = UIFont.systemFont(ofSize: 14)
-        label.textColor = .gray
-        label.numberOfLines = 0
+        label.font = Constants.FontandColors.subtitleFont
+        label.textColor = Constants.FontandColors.subtitleColor
+        label.numberOfLines = 2
         label.translatesAutoresizingMaskIntoConstraints = false
         return label
     }()
@@ -56,26 +58,49 @@ class ArticleTableViewCell: UITableViewCell {
         containerView.addSubview(titleLabel)
         containerView.addSubview(subtitleLabel)
 
-        NSLayoutConstraint.activate([
+        NSLayoutConstraint.activate(
+[
+            // Using consistent padding from PaddingKeys for container view
             containerView.topAnchor.constraint(equalTo: contentView.topAnchor, constant: 10),
-            containerView.leadingAnchor.constraint(equalTo: contentView.leadingAnchor, constant: 10),
-            containerView.trailingAnchor.constraint(equalTo: contentView.trailingAnchor, constant: -10),
-            containerView.bottomAnchor.constraint(equalTo: contentView.bottomAnchor, constant: -10),
+            containerView.leadingAnchor
+                .constraint(
+                    equalTo: contentView.leadingAnchor,
+                    constant: Constants.paddingKeys.DefaultPaddingLeft
+                ),
+            containerView.trailingAnchor
+                .constraint(
+                    equalTo: contentView.trailingAnchor,
+                    constant: Constants.paddingKeys.DefaultPaddingRight
+                ),
+            containerView.bottomAnchor
+                .constraint(
+                    equalTo: contentView.bottomAnchor,
+                    constant: Constants.paddingKeys.DefaultPaddingBottom
+                ),
             
             articleImageView.topAnchor.constraint(equalTo: containerView.topAnchor),
             articleImageView.leadingAnchor.constraint(equalTo: containerView.leadingAnchor),
             articleImageView.trailingAnchor.constraint(equalTo: containerView.trailingAnchor),
             articleImageView.heightAnchor.constraint(equalToConstant: 180),
 
-            titleLabel.topAnchor.constraint(equalTo: articleImageView.bottomAnchor, constant: 10),
+            titleLabel.topAnchor
+                .constraint(
+                    equalTo: articleImageView.bottomAnchor,
+                    constant: Constants.paddingKeys.DefaultPaddingTop
+                ),
             titleLabel.leadingAnchor.constraint(equalTo: containerView.leadingAnchor, constant: 10),
             titleLabel.trailingAnchor.constraint(equalTo: containerView.trailingAnchor, constant: -10),
 
-            subtitleLabel.topAnchor.constraint(equalTo: titleLabel.bottomAnchor, constant: 5),
+            subtitleLabel.topAnchor
+                .constraint(
+                    equalTo: titleLabel.bottomAnchor,
+                    constant: Constants.paddingKeys.DefaultPaddingTop
+                ),
             subtitleLabel.leadingAnchor.constraint(equalTo: containerView.leadingAnchor, constant: 10),
             subtitleLabel.trailingAnchor.constraint(equalTo: containerView.trailingAnchor, constant: -10),
             subtitleLabel.bottomAnchor.constraint(equalTo: containerView.bottomAnchor, constant: -10)
-        ])
+        ]
+)
     }
 
     required init?(coder: NSCoder) {

@@ -125,7 +125,7 @@ class LanguageViewController: UIViewController {
         // Configure button appearance
         var configuration = UIButton.Configuration.filled()
         configuration.cornerStyle = .medium
-        configuration.baseBackgroundColor = selectedLanguageCode == language.code ? .systemBlue : .secondarySystemBackground
+        configuration.baseBackgroundColor = selectedLanguageCode == language.code ? AppColors.iconColor : .secondarySystemBackground
         configuration.baseForegroundColor = selectedLanguageCode == language.code ? .white : .label
         
         // Create attributed string for button title
@@ -162,7 +162,7 @@ class LanguageViewController: UIViewController {
             
             var configuration = button.configuration
             let isSelected = index == sender.tag
-            configuration?.baseBackgroundColor = isSelected ? .systemBlue : .secondarySystemBackground
+            configuration?.baseBackgroundColor = isSelected ? AppColors.iconColor : .secondarySystemBackground
             configuration?.baseForegroundColor = isSelected ? .white : .label
             button.configuration = configuration
         }

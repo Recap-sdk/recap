@@ -33,7 +33,7 @@ extension StreaksViewController {
         valueLabel.text = value
         valueLabel.font = UIFont.boldSystemFont(ofSize: 24) // Increased font size
         valueLabel.textAlignment = .center
-        valueLabel.textColor = .systemOrange // Orange color for the number
+        valueLabel.textColor = AppColors.primaryButtonColor// Orange color for the number
         valueLabel.translatesAutoresizingMaskIntoConstraints = false
         container.addSubview(valueLabel)
 

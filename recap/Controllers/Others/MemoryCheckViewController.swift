@@ -24,9 +24,10 @@ class MemoryCheckViewController: UIViewController {
     private let submitButton: UIButton = {
         let button = UIButton()
         button.setTitle("Submit", for: .normal)
-        button.backgroundColor = .systemBlue
-        button.layer.cornerRadius = 8
-        button.titleLabel?.font = .systemFont(ofSize: 20, weight: .heavy)
+        button.setTitleColor(.systemBlue, for: .normal)
+        button.backgroundColor = UIColor.systemBlue.withAlphaComponent(0.2)
+        button.layer.cornerRadius = Constants.CardSize.DefaultCardCornerRadius
+        button.titleLabel?.font = Constants.FontandColors.titleFont
         button.isEnabled = false
         return button
     }()
@@ -34,7 +35,7 @@ class MemoryCheckViewController: UIViewController {
     private let progressLabel: UILabel = {
         let label = UILabel()
         label.textAlignment = .center
-        label.font = .systemFont(ofSize: 16)
+        label.font = Constants.FontandColors.descriptionFont
         return label
     }()
     
@@ -228,6 +229,7 @@ class MemoryCheckViewController: UIViewController {
         formatter.dateFormat = "yyyy-MM-dd"
         return formatter.string(from: Date())
     }
+    
 }
 
 #Preview{

@@ -2,14 +2,13 @@
 //  AboutAppViewController.swift
 //  recap
 //
-//  Created by admin70 on 27/01/25.
+//  Created by khushi on 27/01/25.
 //
 
 import UIKit
 
 class AboutAppViewController: UIViewController {
     
-    // MARK: - UI Components
     private let scrollView: UIScrollView = {
         let scrollView = UIScrollView()
         scrollView.translatesAutoresizingMaskIntoConstraints = false
@@ -22,12 +21,13 @@ class AboutAppViewController: UIViewController {
         contentView.translatesAutoresizingMaskIntoConstraints = false
         return contentView
     }()
-    
+
     private let headerView: UIView = {
         let view = UIView()
         view.translatesAutoresizingMaskIntoConstraints = false
-        view.backgroundColor = .systemBlue.withAlphaComponent(0.1)
-        view.layer.cornerRadius = 16
+        view.backgroundColor = AppColors.secondaryButtonColor
+        view.layer.cornerRadius = 25
+        view.layer.maskedCorners = [.layerMaxXMaxYCorner, .layerMinXMaxYCorner]
         return view
     }()
     
@@ -36,18 +36,17 @@ class AboutAppViewController: UIViewController {
         imageView.translatesAutoresizingMaskIntoConstraints = false
         imageView.contentMode = .scaleAspectFit
         imageView.image = UIImage(named: "recapLogo")
-        imageView.tintColor = .systemBlue
+        imageView.tintColor = AppColors.secondaryButtonColor
         imageView.layer.cornerRadius = 30
         return imageView
     }()
     
     private let titleLabel: UILabel = {
         let label = UILabel()
-//        label.text = "Recap"
         label.text = LocalizationManager.shared.localizedString(for: "Recap")
         label.font = .systemFont(ofSize: 32, weight: .bold)
         label.textAlignment = .center
-        label.textColor = .systemBlue
+        label.textColor = AppColors.primaryButtonTextColor
         label.translatesAutoresizingMaskIntoConstraints = false
         return label
     }()
@@ -60,7 +59,7 @@ class AboutAppViewController: UIViewController {
             label.text = "Version Not Available"
         }
         label.font = .systemFont(ofSize: 14, weight: .medium)
-        label.textColor = .secondaryLabel
+        label.textColor = AppColors.secondaryButtonTextColor.withAlphaComponent(0.7)
         label.translatesAutoresizingMaskIntoConstraints = false
         return label
     }()
@@ -84,7 +83,7 @@ class AboutAppViewController: UIViewController {
         let view = UIView()
         view.translatesAutoresizingMaskIntoConstraints = false
         view.backgroundColor = .secondarySystemBackground
-        view.layer.cornerRadius = 16
+        view.layer.cornerRadius = Constants.CardSize.DefaultCardCornerRadius
         return view
     }()
     
@@ -188,7 +187,7 @@ class AboutAppViewController: UIViewController {
         let iconImage = UIImageView()
         iconImage.translatesAutoresizingMaskIntoConstraints = false
         iconImage.image = UIImage(systemName: icon)
-        iconImage.tintColor = .systemBlue
+        iconImage.tintColor = AppColors.iconColor
         iconImage.contentMode = .scaleAspectFit
         
         let titleLabel = UILabel()
@@ -240,9 +239,10 @@ class AboutAppViewController: UIViewController {
             contentView.bottomAnchor.constraint(equalTo: scrollView.bottomAnchor),
             contentView.widthAnchor.constraint(equalTo: scrollView.widthAnchor),
             
-            headerView.topAnchor.constraint(equalTo: contentView.topAnchor, constant: 16),
-            headerView.leadingAnchor.constraint(equalTo: contentView.leadingAnchor, constant: 16),
-            headerView.trailingAnchor.constraint(equalTo: contentView.trailingAnchor, constant: -16),
+            headerView.topAnchor.constraint(equalTo: contentView.topAnchor),
+            headerView.leadingAnchor.constraint(equalTo: contentView.leadingAnchor),
+            headerView.trailingAnchor.constraint(equalTo: contentView.trailingAnchor),
+            headerView.heightAnchor.constraint(equalToConstant: 260),
             
             appIconImageView.topAnchor.constraint(equalTo: headerView.topAnchor, constant: 24),
             appIconImageView.centerXAnchor.constraint(equalTo: headerView.centerXAnchor),

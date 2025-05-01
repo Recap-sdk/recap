@@ -2,19 +2,18 @@
 //  PatientsViewController.swift
 //  recap
 //
-//  Created by admin70 on 27/01/25.
+//  Created by khushi on 27/01/25.
 //
 
 import UIKit
 
 class PatientsViewController: UIViewController, UITableViewDelegate, UITableViewDataSource {
-    // Data passed from ProfileViewController
     var userDetails: [String: Any]?
     var prefetchedQuestions: [rapiMemory]?
 
     private let profileImageView: UIImageView = {
             let imageView = UIImageView()
-            imageView.image = UIImage(systemName: "person.circle.fill") // Replace with your image name
+            imageView.image = UIImage(systemName: "person.circle.fill")
             imageView.contentMode = .scaleAspectFill
             imageView.layer.cornerRadius = 50
             imageView.clipsToBounds = true
@@ -34,8 +33,9 @@ class PatientsViewController: UIViewController, UITableViewDelegate, UITableView
         let tableView = UITableView()
         tableView.translatesAutoresizingMaskIntoConstraints = false
         tableView.isScrollEnabled = false
-        tableView.layer.cornerRadius = 10
+        tableView.layer.cornerRadius = Constants.CardSize.DefaultCardCornerRadius
         tableView.layer.masksToBounds = true
+        tableView.isUserInteractionEnabled = false
         return tableView
     }()
 
@@ -43,17 +43,18 @@ class PatientsViewController: UIViewController, UITableViewDelegate, UITableView
         super.viewDidLoad()
         view.backgroundColor = .systemBackground
         title = "Patient"
-        setupNavigationBar()
+        navigationController?.navigationBar.prefersLargeTitles = false
         setupUI()
         setupTableView()
-        
-        // Fetch patient details from UserDefaults
-        if let savedUserData = UserDefaults.standard.object(forKey: "patientDetails") as? [String: Any] {
-            userDetails = savedUserData
-        }
-        
+        fetchPatientDetails()
         updateUIWithData()
+        animateContent()
     }
+
+    private func fetchPatientDetails() {
+        userDetails = UserDefaults.standard.object(forKey: Constants.UserDefaultsKeys.patientDetails) as? [String: Any]
+    }
+
 
     private func updateUIWithData() {
         if let userDetails = userDetails {
@@ -61,7 +62,6 @@ class PatientsViewController: UIViewController, UITableViewDelegate, UITableView
 
             if let profileImageURL = userDetails["profileImageURL"] as? String, !profileImageURL.isEmpty {
                 if let url = URL(string: profileImageURL) {
-                    // Load the image asynchronously
                     DispatchQueue.global().async {
                         if let data = try? Data(contentsOf: url) {
                             DispatchQueue.main.async {
@@ -71,21 +71,8 @@ class PatientsViewController: UIViewController, UITableViewDelegate, UITableView
                     }
                 }
             }
-            
             tableView.reloadData()
         }
-    }
-
-    
-
-    private func setupNavigationBar() {
-        let doneButton = UIBarButtonItem(
-            title: "Done",
-            style: .done,
-            target: self,
-            action: #selector(doneButtonTapped)
-        )
-        navigationItem.rightBarButtonItem = doneButton
     }
 
     @objc private func doneButtonTapped() {
@@ -119,9 +106,7 @@ class PatientsViewController: UIViewController, UITableViewDelegate, UITableView
         tableView.dataSource = self
         tableView.register(UITableViewCell.self, forCellReuseIdentifier: "cell")
     }
-
-    // MARK: - UITableViewDelegate & DataSource Methods
-
+    
     func numberOfSections(in tableView: UITableView) -> Int {
         return 1
     }
@@ -132,7 +117,7 @@ class PatientsViewController: UIViewController, UITableViewDelegate, UITableView
 
     func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
         let cell = UITableViewCell(style: .value1, reuseIdentifier: "cell")
-        cell.accessoryType = .disclosureIndicator
+        cell.accessoryType = .none
 
         let titles = ["First Name", "Last Name", "Date of Birth", "Sex", "Blood Type"]
         let values = [
@@ -149,8 +134,30 @@ class PatientsViewController: UIViewController, UITableViewDelegate, UITableView
         if values[indexPath.row] == "Not Set" {
             cell.detailTextLabel?.textColor = .systemGray
         }
-
         return cell
+    }
+    func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
+        tableView.deselectRow(at: indexPath, animated: false)
+    }
+    
+    private func animateContent() {
+        let views = [profileImageView, nameLabel, tableView]
+            
+        views.enumerated().forEach { index, view in
+            view.alpha = 0
+            view.transform = CGAffineTransform(translationX: 0, y: 20)
+            
+            UIView.animate(
+                withDuration: 0.6,
+                delay: Double(index) * 0.2,
+                usingSpringWithDamping: 0.8,
+                initialSpringVelocity: 0.5,
+                options: .curveEaseOut
+            ) {
+                view.alpha = 1
+                view.transform = .identity
+            }
+        }
     }
 }
 

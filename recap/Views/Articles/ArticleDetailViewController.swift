@@ -55,6 +55,7 @@ class ArticleDetailViewController: UIViewController {
     private let readMoreButton: UIButton = {
         let button = UIButton(type: .system)
         button.setTitle("Read More", for: .normal)
+        button.setTitleColor(AppColors.iconColor, for: .normal)
         button.translatesAutoresizingMaskIntoConstraints = false
         button.addTarget(self, action: #selector(openLink), for: .touchUpInside)
         return button
@@ -73,7 +74,7 @@ class ArticleDetailViewController: UIViewController {
         super.viewDidLoad()
         
         view.backgroundColor = .white
-        title = article.title
+//        title = "Article"
         setupLayout()
         
         // Set article details

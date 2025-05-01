@@ -91,7 +91,7 @@ class SuccessQuestionsViewController: UIViewController {
 
     private let successTitleLabel: UILabel = {
         let label = UILabel()
-        label.text = "Congratulations!"
+        label.text = "Well Done!"
         label.font = UIFont.systemFont(ofSize: 24, weight: .bold)
         label.textColor = .black
         label.textAlignment = .center

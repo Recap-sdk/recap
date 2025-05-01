@@ -28,7 +28,7 @@ class CardGameViewController: UIViewController {
         super.viewDidLoad()
         setupUI()
         resetGame()
-        applyGradientBackground()
+//        applyGradientBackground()
     }
     
     private func setupUI() {
@@ -51,7 +51,7 @@ class CardGameViewController: UIViewController {
         // Higher Button
         higherButton.setTitle("Higher", for: .normal)
         higherButton.backgroundColor = .systemGreen
-        higherButton.layer.cornerRadius = 10
+        higherButton.layer.cornerRadius = Constants.CardSize.DefaultCardCornerRadius
         higherButton.titleLabel?.font = .boldSystemFont(ofSize: 18)
         higherButton.setTitleColor(.white, for: .normal)
         higherButton.addTarget(self, action: #selector(higherButtonTapped), for: .touchUpInside)
@@ -61,7 +61,7 @@ class CardGameViewController: UIViewController {
         // Lower Button
         lowerButton.setTitle("Lower", for: .normal)
         lowerButton.backgroundColor = .systemRed
-        lowerButton.layer.cornerRadius = 10
+        lowerButton.layer.cornerRadius = Constants.CardSize.DefaultCardCornerRadius
         lowerButton.titleLabel?.font = .boldSystemFont(ofSize: 18)
         lowerButton.setTitleColor(.white, for: .normal)
         lowerButton.addTarget(self, action: #selector(lowerButtonTapped), for: .touchUpInside)
@@ -141,7 +141,7 @@ class CardGameViewController: UIViewController {
                     cardPreview.image = UIImage(named: "card_\(deck[cardIndex])")
                     cardPreview.contentMode = .scaleAspectFit
                     cardPreview.clipsToBounds = true
-                    cardPreview.layer.cornerRadius = 8
+                    cardPreview.layer.cornerRadius = Constants.CardSize.DefaultCardCornerRadius
                     rowStackView.addArrangedSubview(cardPreview)
                     cardIndex += 1
                 }

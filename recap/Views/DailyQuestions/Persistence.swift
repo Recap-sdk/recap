@@ -2,19 +2,17 @@
 //  Persistence.swift
 //  Recap
 //
-//  Created by user@47 on 15/01/25.
+//  Created by s1834 on 15/01/25.
 //
 
 import CoreData
 
 class PersistenceController {
     static let shared = PersistenceController()
-
-    // The persistent container to manage Core Data
     let persistentContainer: NSPersistentContainer
 
     init() {
-        persistentContainer = NSPersistentContainer(name: "RecapModel") // Replace with your .xcdatamodeld file name
+        persistentContainer = NSPersistentContainer(name: "RecapModel")
         persistentContainer.loadPersistentStores { description, error in
             if let error = error as NSError? {
                 fatalError("Unresolved error \(error), \(error.userInfo)")
@@ -22,7 +20,6 @@ class PersistenceController {
         }
     }
     
-    // Save context method
     func saveContext() {
         let context = persistentContainer.viewContext
         if context.hasChanges {

@@ -7,16 +7,16 @@
       <BreakpointProxy
          BreakpointExtensionID = "Xcode.Breakpoint.FileBreakpoint">
          <BreakpointContent
-            uuid = "796AC94A-D5C4-4273-8C9F-4751F33FDFF5"
+            uuid = "506EBF7C-3CC6-4DC5-A92F-966FF8EF2E0A"
             shouldBeEnabled = "No"
             ignoreCount = "0"
             continueAfterRunningActions = "No"
-            filePath = "recap/Managers/LoginFunctions.swift"
+            filePath = "recap/Managers/Family/FamilyLoginFunctions.swift"
             startingColumnNumber = "9223372036854775807"
             endingColumnNumber = "9223372036854775807"
-            startingLineNumber = "223"
-            endingLineNumber = "223"
-            landmarkName = "logoutTapped()"
+            startingLineNumber = "58"
+            endingLineNumber = "58"
+            landmarkName = "googleSignInTapped()"
             landmarkType = "7">
          </BreakpointContent>
       </BreakpointProxy>

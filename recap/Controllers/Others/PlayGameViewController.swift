@@ -5,63 +5,59 @@
 //  Created by Diptayan Jash on 06/11/24.
 //
 
+
 import UIKit
 
-class PlayGameViewController: UIViewController, UICollectionViewDelegate, UICollectionViewDataSource, UICollectionViewDelegateFlowLayout {
-    private var collectionView: UICollectionView!
+class PlayGameViewController: UIViewController, UITableViewDelegate, UITableViewDataSource {
+    private var tableView: UITableView!
 
     override func viewDidLoad() {
         super.viewDidLoad()
         applyGradientBackground()
         title = "Games"
 
-        let layout = UICollectionViewFlowLayout()
-        layout.scrollDirection = .vertical
-        layout.minimumInteritemSpacing = 10
-        layout.minimumLineSpacing = 10
-        layout.sectionInset = UIEdgeInsets(top: 10, left: 15, bottom: 10, right: 15)
-        layout.itemSize = CGSize(width: 170, height: 226)
-
-        collectionView = UICollectionView(frame: .zero, collectionViewLayout: layout)
-        collectionView.register(GamesCell.self, forCellWithReuseIdentifier: GamesCell.identifier)
-        collectionView.delegate = self
-        collectionView.dataSource = self
-        collectionView.backgroundColor = .clear
-        collectionView.alwaysBounceVertical = true
-
-        view.addSubview(collectionView)
-
-        collectionView.translatesAutoresizingMaskIntoConstraints = false
+        // Initialize table view
+        tableView = UITableView()
+        tableView.delegate = self
+        tableView.dataSource = self
+        tableView.register(GamesTableViewCell.self, forCellReuseIdentifier: GamesTableViewCell.identifier)
+        tableView.backgroundColor = .clear
+        tableView.separatorStyle = .none
+        tableView.rowHeight = Constants.CardSize.DefaultCardWidth
+        // Add table view to view hierarchy
+        view.addSubview(tableView)
+        
+        // Set up constraints
+        tableView.translatesAutoresizingMaskIntoConstraints = false
         NSLayoutConstraint.activate([
-            collectionView.topAnchor.constraint(equalTo: view.safeAreaLayoutGuide.topAnchor),
-            collectionView.leadingAnchor.constraint(equalTo: view.safeAreaLayoutGuide.leadingAnchor),
-            collectionView.trailingAnchor.constraint(equalTo: view.safeAreaLayoutGuide.trailingAnchor),
-            collectionView.bottomAnchor.constraint(equalTo: view.safeAreaLayoutGuide.bottomAnchor),
+            tableView.topAnchor.constraint(equalTo: view.safeAreaLayoutGuide.topAnchor),
+            tableView.leadingAnchor.constraint(equalTo: view.leadingAnchor),
+            tableView.trailingAnchor.constraint(equalTo: view.trailingAnchor),
+            tableView.bottomAnchor.constraint(equalTo: view.bottomAnchor)
         ])
-        GradientBackground()
     }
 
-    private func GradientBackground() {
-        let gradientLayer = CAGradientLayer()
-        gradientLayer.colors = [
-            UIColor.systemPink.withAlphaComponent(0.1).cgColor,
-            UIColor.systemBackground.cgColor,
-        ]
-        gradientLayer.startPoint = CGPoint(x: 0, y: 0)
-        gradientLayer.endPoint = CGPoint(x: 0, y: 0.6)
-        gradientLayer.frame = view.bounds
-
-        view.layer.insertSublayer(gradientLayer, at: 0)
-    }
-
-
-    // MARK: - Collection View Data Source
-
-    func collectionView(_ collectionView: UICollectionView, numberOfItemsInSection section: Int) -> Int {
+    // MARK: - Table View Data Source
+    
+    func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
         return gamesDemo.count
     }
-
-    func collectionView(_ collectionView: UICollectionView, didSelectItemAt indexPath: IndexPath) {
+    
+    func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
+        guard let cell = tableView.dequeueReusableCell(withIdentifier: GamesTableViewCell.identifier, for: indexPath) as? GamesTableViewCell else {
+            fatalError("Unable to dequeue GamesTableViewCell")
+        }
+        
+        let game = gamesDemo[indexPath.row]
+        cell.configure(with: game)
+        return cell
+    }
+    
+    // MARK: - Table View Delegate
+    
+    func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
+        tableView.deselectRow(at: indexPath, animated: true)
+        
         let selectedGame = gamesDemo[indexPath.row]
         
         if let viewControllerType = NSClassFromString("recap.\(selectedGame.screenName)") as? UIViewController.Type {
@@ -70,15 +66,6 @@ class PlayGameViewController: UIViewController, UICollectionViewDelegate, UIColl
         } else {
             print("Error: ViewController \(selectedGame.screenName) not found.")
         }
-    }
-
-    func collectionView(_ collectionView: UICollectionView, cellForItemAt indexPath: IndexPath) -> UICollectionViewCell {
-        guard let cell = collectionView.dequeueReusableCell(withReuseIdentifier: GamesCell.identifier, for: indexPath) as? GamesCell else {
-            fatalError("Unable to dequeue FamilyMemberCell")
-        }
-        let games = gamesDemo[indexPath.row]
-        cell.configure(with: games)
-        return cell
     }
     
     private func applyGradientBackground() {
@@ -93,6 +80,7 @@ class PlayGameViewController: UIViewController, UICollectionViewDelegate, UIColl
         view.layer.insertSublayer(gradientLayer, at: 0)
     }
 }
+
 #Preview(){
     PlayGameViewController()
 }

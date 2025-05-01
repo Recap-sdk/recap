@@ -1,7 +1,7 @@
 import FirebaseAuth
-import UIKit
 import FirebaseFirestore
 import GoogleSignIn
+import UIKit
 
 class patientInfo: UIViewController {
     weak var delegate: PatientInfoDelegate?
@@ -19,6 +19,19 @@ class patientInfo: UIViewController {
     }
 
     // MARK: - UI Components
+
+    private let scrollView: UIScrollView = {
+        let scrollView = UIScrollView()
+        scrollView.showsVerticalScrollIndicator = true
+        scrollView.alwaysBounceVertical = true
+        scrollView.keyboardDismissMode = .interactive
+        return scrollView
+    }()
+
+    private let contentView: UIView = {
+        let view = UIView()
+        return view
+    }()
 
     private let profileImageView: UIImageView = {
         let imageView = UIImageView()
@@ -50,9 +63,14 @@ class patientInfo: UIViewController {
     private let saveButton: UIButton = {
         let button = UIButton()
         button.setTitle("Save", for: .normal)
-        button.backgroundColor = .systemBlue
-        button.layer.cornerRadius = 8
-        button.titleLabel?.font = .systemFont(ofSize: 17, weight: .semibold)
+        button.backgroundColor = Constants.ButtonStyle.DefaultButtonBackgroundColor
+        button.layer.cornerRadius = Constants.CardSize.DefaultCardCornerRadius
+        button.titleLabel?.font = Constants.ButtonStyle.DefaultButtonFont
+        button
+            .setTitleColor(
+                Constants.ButtonStyle.DefaultButtonTextColor,
+                for: .normal
+            )
         return button
     }()
 
@@ -79,14 +97,24 @@ class patientInfo: UIViewController {
         setupPickers()
         setupTextFields()
         
+        setupKeyboardNotifications()
+
+        // Prevent dismissal by swipe down gesture
+        if #available(iOS 13.0, *) {
+            isModalInPresentation = true
+        }
         if let user = GIDSignIn.sharedInstance.currentUser,
-              let imageURL = user.profile?.imageURL(withDimension: 200) {
-               downloadImage(from: imageURL)
-           }
+           let imageURL = user.profile?.imageURL(withDimension: 200) {
+            downloadImage(from: imageURL)
+        }
     }
-    
+    override func viewWillDisappear(_ animated: Bool) {
+            super.viewWillDisappear(animated)
+            removeKeyboardNotifications()
+        }
+
     private func downloadImage(from url: URL) {
-        URLSession.shared.dataTask(with: url) { [weak self] data, response, error in
+        URLSession.shared.dataTask(with: url) { [weak self] data, _, error in
             guard let self = self, error == nil, let data = data, let image = UIImage(data: data) else {
                 print("Failed to download image: \(error?.localizedDescription ?? "Unknown error")")
                 return
@@ -102,9 +130,29 @@ class patientInfo: UIViewController {
     private func setupUI() {
         view.backgroundColor = .systemBackground
 
+        // Add scrollView to view
+        scrollView.translatesAutoresizingMaskIntoConstraints = false
+        contentView.translatesAutoresizingMaskIntoConstraints = false
+        view.addSubview(scrollView)
+        scrollView.addSubview(contentView)
+
+        // Setup scrollView constraints
+        NSLayoutConstraint.activate([
+            scrollView.topAnchor.constraint(equalTo: view.safeAreaLayoutGuide.topAnchor),
+            scrollView.leadingAnchor.constraint(equalTo: view.leadingAnchor),
+            scrollView.trailingAnchor.constraint(equalTo: view.trailingAnchor),
+            scrollView.bottomAnchor.constraint(equalTo: view.bottomAnchor),
+
+            contentView.topAnchor.constraint(equalTo: scrollView.topAnchor),
+            contentView.leadingAnchor.constraint(equalTo: scrollView.leadingAnchor),
+            contentView.trailingAnchor.constraint(equalTo: scrollView.trailingAnchor),
+            contentView.bottomAnchor.constraint(equalTo: scrollView.bottomAnchor),
+            contentView.widthAnchor.constraint(equalTo: scrollView.widthAnchor),
+        ])
+
         [profileImageView, stackView, saveButton].forEach {
             $0.translatesAutoresizingMaskIntoConstraints = false
-            view.addSubview($0)
+            contentView.addSubview($0)
         }
 
         [firstNameField, lastNameField, dobField, sexField, bloodGroupField, stageField].forEach {
@@ -112,23 +160,28 @@ class patientInfo: UIViewController {
         }
 
         NSLayoutConstraint.activate([
-            profileImageView.topAnchor.constraint(equalTo: view.safeAreaLayoutGuide.topAnchor, constant: 20),
-            profileImageView.centerXAnchor.constraint(equalTo: view.centerXAnchor),
+            profileImageView.topAnchor.constraint(equalTo: contentView.topAnchor, constant: 20),
+            profileImageView.centerXAnchor.constraint(equalTo: contentView.centerXAnchor),
             profileImageView.widthAnchor.constraint(equalToConstant: 100),
             profileImageView.heightAnchor.constraint(equalToConstant: 100),
 
             stackView.topAnchor.constraint(equalTo: profileImageView.bottomAnchor, constant: 32),
-            stackView.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: 20),
-            stackView.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -20),
+            stackView.leadingAnchor.constraint(equalTo: contentView.leadingAnchor, constant: 20),
+            stackView.trailingAnchor.constraint(equalTo: contentView.trailingAnchor, constant: -20),
 
-            saveButton.bottomAnchor.constraint(equalTo: view.safeAreaLayoutGuide.bottomAnchor, constant: -20),
-            saveButton.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: 20),
-            saveButton.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -20),
+            saveButton.topAnchor.constraint(equalTo: stackView.bottomAnchor, constant: 32),
+            saveButton.leadingAnchor.constraint(equalTo: contentView.leadingAnchor, constant: 20),
+            saveButton.trailingAnchor.constraint(equalTo: contentView.trailingAnchor, constant: -20),
             saveButton.heightAnchor.constraint(equalToConstant: 50),
+            saveButton.bottomAnchor.constraint(equalTo: contentView.bottomAnchor, constant: -20),
         ])
 
         let tapGesture = UITapGestureRecognizer(target: self, action: #selector(profileImageTapped))
         profileImageView.addGestureRecognizer(tapGesture)
+
+        // Add tap gesture to dismiss keyboard when tapping outside text fields
+        let tapToDismiss = UITapGestureRecognizer(target: self, action: #selector(dismissKeyboard))
+        view.addGestureRecognizer(tapToDismiss)
 
         saveButton.addTarget(self, action: #selector(saveButtonTapped), for: .touchUpInside)
     }
@@ -203,6 +256,80 @@ class patientInfo: UIViewController {
 
     // MARK: - Actions
 
+    private func setupKeyboardNotifications() {
+        NotificationCenter.default.addObserver(
+            self,
+            selector: #selector(keyboardWillShow),
+            name: UIResponder.keyboardWillShowNotification,
+            object: nil
+        )
+        NotificationCenter.default.addObserver(
+            self,
+            selector: #selector(keyboardWillHide),
+            name: UIResponder.keyboardWillHideNotification,
+            object: nil
+        )
+    }
+
+    private func removeKeyboardNotifications() {
+        NotificationCenter.default.removeObserver(
+            self,
+            name: UIResponder.keyboardWillShowNotification,
+            object: nil
+        )
+        NotificationCenter.default.removeObserver(
+            self,
+            name: UIResponder.keyboardWillHideNotification,
+            object: nil
+        )
+    }
+
+    @objc private func keyboardWillShow(notification: Notification) {
+        guard let keyboardFrame = notification.userInfo?[UIResponder.keyboardFrameEndUserInfoKey] as? CGRect else { return }
+
+        let contentInsets = UIEdgeInsets(top: 0, left: 0, bottom: keyboardFrame.height, right: 0)
+        scrollView.contentInset = contentInsets
+        scrollView.scrollIndicatorInsets = contentInsets
+
+        // Determine if the active text field is obscured by the keyboard
+        var visibleRect = view.frame
+        visibleRect.size.height -= keyboardFrame.height
+
+        if let activeField = findFirstResponder() as? UITextField {
+            let fieldRect = activeField.convert(activeField.bounds, to: scrollView)
+            if !visibleRect.contains(fieldRect.origin) {
+                scrollView.scrollRectToVisible(fieldRect, animated: true)
+            }
+        }
+    }
+
+    @objc private func keyboardWillHide(notification: Notification) {
+        scrollView.contentInset = .zero
+        scrollView.scrollIndicatorInsets = .zero
+    }
+
+    private func findFirstResponder() -> UIView? {
+        return findFirstResponder(in: view)
+    }
+
+    private func findFirstResponder(in view: UIView) -> UIView? {
+        if view.isFirstResponder {
+            return view
+        }
+
+        for subview in view.subviews {
+            if let firstResponder = findFirstResponder(in: subview) {
+                return firstResponder
+            }
+        }
+
+        return nil
+    }
+
+    @objc private func dismissKeyboard() {
+        view.endEditing(true)
+    }
+
     @objc private func datePickerChanged() {
         let formatter = DateFormatter()
         formatter.dateFormat = "dd/MM/yyyy"
@@ -224,7 +351,7 @@ class patientInfo: UIViewController {
               let sex = sexField.text, !sex.isEmpty,
               let bloodGroup = bloodGroupField.text, !bloodGroup.isEmpty,
               let stage = stageField.text, !stage.isEmpty else {
-            showAlert(message: "Please fill in all fields")
+            showLocalAlert(message: "Please fill in all fields")
             return
         }
 
@@ -236,10 +363,10 @@ class patientInfo: UIViewController {
         saveButton.isEnabled = false
 
         guard let userId = Auth.auth().currentUser?.uid else {
-            showAlert(message: "User not logged in.")
+            showLocalAlert(message: "User not logged in.")
             return
         }
-        
+
         let profileImageURL = GIDSignIn.sharedInstance.currentUser?.profile?.imageURL(withDimension: 200)?.absoluteString ?? ""
 
         let updatedData: [String: Any] = [
@@ -249,7 +376,7 @@ class patientInfo: UIViewController {
             "sex": sex,
             "bloodGroup": bloodGroup,
             "stage": stage,
-            "profileImageURL": profileImageURL
+            "profileImageURL": profileImageURL,
         ]
 
         let db = Firestore.firestore()
@@ -262,16 +389,38 @@ class patientInfo: UIViewController {
 
                 if let error = error {
                     print("Error updating profile: \(error.localizedDescription)")
-                    self?.showAlert(message: "Failed to save profile. Please try again.")
+                    self?.showLocalAlert(message: "Failed to save profile. Please try again.")
                 } else {
                     print("Profile updated successfully")
-                    let tabBarVC = TabbarViewController()
-                    guard let window = UIApplication.shared.windows.first else { return }
-                    window.rootViewController = tabBarVC
-                    window.makeKeyAndVisible()
+
+                    UserDefaultsStorageProfile.shared.saveProfile(details: updatedData, image: nil) { success in
+                        if success {
+                            UserDefaults.standard.set(true, forKey: Constants.UserDefaultsKeys.hasPatientCompletedProfile)
+                            UserDefaults.standard.synchronize()
+
+                            if let delegate = self?.delegate {
+                                delegate.didCompleteProfile()
+                            } else {
+                                // Fallback if delegate is not set
+                                let tabBarVC = TabbarViewController()
+                                guard let window = UIApplication.shared.windows.first else { return }
+                                window.rootViewController = tabBarVC
+                                window.makeKeyAndVisible()
+                            }
+                        } else {
+                            self?.showLocalAlert(message: "Failed to save profile locally. Please try again.")
+                        }
+                    }
                 }
             }
         }
+    }
+
+    // Local alert method that doesn't dismiss the view controller
+    private func showLocalAlert(message: String) {
+        let alertController = UIAlertController(title: "Notice", message: message, preferredStyle: .alert)
+        alertController.addAction(UIAlertAction(title: "OK", style: .default))
+        present(alertController, animated: true)
     }
 }
 
@@ -368,7 +517,7 @@ class CustomTextField: UITextField {
 
     private func setup() {
         backgroundColor = .systemGray6
-        layer.cornerRadius = 8
+        layer.cornerRadius = Constants.CardSize.DefaultCardCornerRadius
         leftView = UIView(frame: CGRect(x: 0, y: 0, width: 12, height: 1))
         leftViewMode = .always
         heightAnchor.constraint(equalToConstant: 44).isActive = true

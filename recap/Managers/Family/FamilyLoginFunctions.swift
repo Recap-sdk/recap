@@ -2,7 +2,7 @@
 //  FamilyLoginFunctions.swift
 //  recap
 //
-//  Created by user@47 on 29/01/25.
+//  Created by s1834 on 29/01/25.
 //
 
 import FirebaseAuth
@@ -10,174 +10,224 @@ import FirebaseCore
 import FirebaseFirestore
 import GoogleSignIn
 import UIKit
+import Lottie
 
 extension FamilyLoginViewController {
-    
     @objc func verifyPatientUID() {
-        print("Verify Button tapped")
-        
-        guard let verifyUID = self as? FamilyLoginViewController else { return }
+        let spinner = UIActivityIndicatorView(style: .medium)
+        spinner.startAnimating()
+        spinner.color = .white
+        verifyButton.setTitle("", for: .normal)
+        verifyButton.addSubview(spinner)
+        spinner.center = CGPoint(x: verifyButton.bounds.midX, y: verifyButton.bounds.midY)
 
-        let patientUID = verifyUID.patientUIDField.text ?? ""
-        print("Patient UID entered: \(patientUID)")  // Log the entered patient UID
-        
+        let patientUID = patientUIDField.text ?? ""
         let db = Firestore.firestore()
 
-        db.collection("users").getDocuments { (usersSnapshot, error) in
-            if let error = error {
-                print("Error fetching users: \(error.localizedDescription)")
-                verifyUID.showAlert(message: "Unable to retrieve user details.")
+        db.collection("users").getDocuments { usersSnapshot, error in
+            spinner.stopAnimating()
+            self.verifyButton.setTitle("Verify", for: .normal)
+            guard error == nil else {
+                self.showAlert(message: "Unable to retrieve user details.")
                 return
             }
 
             guard let userDocs = usersSnapshot?.documents, !userDocs.isEmpty else {
-                verifyUID.showAlert(message: "No users found.")
+                self.animateShake(for: self.patientUIDField)
+                self.showAlert(message: "No users found.")
                 return
             }
 
-            var patientUIDFound = false
             for userDoc in userDocs {
-                let userData = userDoc.data()
-                // Log the fetched user data for debugging purposes
-                print("Fetched user data: \(userData)")
-                
-                // Check if the patient UID exists and matches
-                if let storedUID = userData["patientUID"] as? String, storedUID == patientUID {
-                    print("Patient UID verified successfully")
-                    
-                    // Enable the email and password fields
-                    verifyUID.emailField.isEnabled = true
-                    verifyUID.passwordField.isEnabled = true
-                    
-                    // Store the document ID in UserDefaults or similar
+                if let storedUID = userDoc.data()["patientUID"] as? String, storedUID == patientUID {
                     UserDefaults.standard.set(userDoc.documentID, forKey: "verifiedUserDocID")
-                    print("Verified user document ID: \(userDoc.documentID)")
-                    
-                    // Change the verifyButton's appearance to indicate success
-                    verifyUID.verifyButton.setTitle("Verified", for: .normal)
-                    verifyUID.verifyButton.backgroundColor = .systemGreen
-                    
-                    patientUIDFound = true
-                    break
+                    self.googleSignInButton.isEnabled = true
+
+                    UIView.animate(withDuration: 0.3) {
+                        self.verifyButton.setTitle("Verified", for: .normal)
+                        self.verifyButton.backgroundColor = AppColors.iconColor
+                        self.verifyButton.setTitleColor(.white, for: .normal) 
+                    }
+                    return
                 }
             }
 
-            if !patientUIDFound {
-                verifyUID.showAlert(message: "Patient UID does not match. Please try again.")
-            }
+            self.showAlert(message: "Patient UID does not match. Please try again.")
         }
     }
 
-    @objc func loginTapped() {
-        print("Login tapped")
-
-        guard let loginVC = self as? FamilyLoginViewController else { return }
-        
+    @objc func googleSignInTapped() {
         guard let userDocID = UserDefaults.standard.string(forKey: "verifiedUserDocID") else {
-            print("No user document found. Please verify UID first.")
-            loginVC.showAlert(message: "Please verify patient UID first.")
+            showAlert(message: "Please verify patient UID first.")
             return
         }
 
-        let enteredEmail = loginVC.emailField.text ?? ""
-        let enteredPassword = loginVC.passwordField.text ?? ""
+        let loadingAnimation = self.showLoadingAnimation()
         
-        print("Email entered: \(enteredEmail)")
-        print("Password entered: \(enteredPassword)")
-
-        let db = Firestore.firestore()
-        
-        db.collection("users").document(userDocID).collection("family_members").getDocuments { (familySnapshot, error) in
+        GIDSignIn.sharedInstance.signIn(withPresenting: self) { [weak self] result, error in
+            guard let self = self else { return }
+            
             if let error = error {
-                print("Error fetching family members: \(error.localizedDescription)")
-                loginVC.showAlert(message: "Unable to retrieve family details.")
+                self.stopLoadingAnimation(loadingAnimation)
+                self.showAlert(message: "Google Sign-In failed: \(error.localizedDescription)")
                 return
             }
 
-            guard let familyDocs = familySnapshot?.documents, !familyDocs.isEmpty else {
-                loginVC.showAlert(message: "No family members found.")
+            guard let user = result?.user else {
+                self.stopLoadingAnimation(loadingAnimation)
+                self.showAlert(message: "Failed to get user information")
                 return
             }
 
-            var matchedFamilyMember: [String: Any]? = nil
+            // Get user's email and profile picture
+            let email = user.profile?.email ?? ""
+            let profileImageURL = user.profile?.imageURL(withDimension: 200)?.absoluteString ?? ""
 
-            for familyDoc in familyDocs {
-                let familyData = familyDoc.data()
-                print("Fetched family member data: \(familyData)")
-                
-                if let storedPassword = familyData["password"] as? String, storedPassword == enteredPassword,
-                   let email = familyData["email"] as? String, email == enteredEmail {
-                    matchedFamilyMember = familyData
-                    break
-                }
-            }
-
-            if let matchedMember = matchedFamilyMember {
-                print("Family member authenticated: \(matchedMember)")
-
-                // Store family member details
-                UserDefaults.standard.set(matchedMember, forKey: "familyMemberDetails")
-
-                db.collection("users").document(userDocID).getDocument { (document, error) in
+            // Check if this email is already registered as a family member
+            let db = Firestore.firestore()
+            db.collection("users").document(userDocID).collection("family_members")
+                .whereField("email", isEqualTo: email)
+                .getDocuments { [weak self] snapshot, error in
+                    guard let self = self else { return }
+                    
                     if let error = error {
-                        print("Error fetching patient details: \(error.localizedDescription)")
+                        self.stopLoadingAnimation(loadingAnimation)
+                        self.showAlert(message: "Error checking family member status: \(error.localizedDescription)")
                         return
                     }
 
-                    guard let document = document, document.exists else {
-                        print("Patient document not found.")
-                        return
-                    }
+                    if let documents = snapshot?.documents, !documents.isEmpty {
+                        // Family member exists, proceed with login
+                        let familyData = documents[0].data()
+                        
+                        // Create UserDefaults data without any Firestore-specific fields
+                        let userDefaultsData: [String: Any] = [
+                            "name": familyData["name"] as? String ?? "",
+                            "email": familyData["email"] as? String ?? "",
+                            "phone": familyData["phone"] as? String ?? "",
+                            "relation": familyData["relation"] as? String ?? "",
+                            "imageURL": profileImageURL
+                        ]
+                        
+                        UserDefaults.standard.set(userDefaultsData, forKey: "familyMemberDetails")
+                        UserDefaults.standard.set(profileImageURL, forKey: Constants.UserDefaultsKeys.familyMemberImageURL)
+                        UserDefaults.standard.set(true, forKey: Constants.UserDefaultsKeys.isFamilyMemberLoggedIn)
+                        UserDefaults.standard.synchronize()
 
-                    let userData = document.data() ?? [:]
-                    print("Fetched user data for patient: \(userData)")
-
-                    // Store patient details
-                    UserDefaults.standard.set(userData, forKey: "patientDetails")
-
-                    // Navigate to FamilyViewController
-                    DispatchQueue.main.async {
-                        let familyVC = TabbarFamilyViewController()
-                        if let window = UIApplication.shared.windows.first {
-                            let navigationController = UINavigationController(rootViewController: familyVC)
-                            window.rootViewController = navigationController
-                            window.makeKeyAndVisible()
-                        }
+                        // Fetch patient details
+                        self.fetchPatientDetails(userDocID: userDocID, loadingAnimation: loadingAnimation)
+                    } else {
+                        // New family member, show registration screen
+                        self.stopLoadingAnimation(loadingAnimation)
+                        self.showFamilyRegistration(email: email, profileImageURL: profileImageURL, userDocID: userDocID)
                     }
                 }
-            } else {
-                loginVC.showAlert(message: "Incorrect email or password. Please try again.")
+        }
+    }
+    
+    @objc func appleSignInTapped() {
+        print("Apple Sign-In tapped")
+    }
+
+    private func showFamilyRegistration(email: String, profileImageURL: String, userDocID: String) {
+        let registrationVC = FamilyRegistrationViewController()
+        registrationVC.email = email
+        registrationVC.profileImageURL = profileImageURL
+        registrationVC.userDocID = userDocID
+        let navController = UINavigationController(rootViewController: registrationVC)
+        present(navController, animated: true)
+    }
+
+    private func fetchPatientDetails(userDocID: String, loadingAnimation: LottieAnimationView) {
+        let db = Firestore.firestore()
+        db.collection("users").document(userDocID).getDocument { [weak self] document, error in
+            guard let self = self else { return }
+            
+            self.stopLoadingAnimation(loadingAnimation)
+
+            if let error = error {
+                print("Error fetching patient details: \(error.localizedDescription)")
+                return
+            }
+
+            guard let document = document, document.exists else {
+                print("Patient document not found.")
+                return
+            }
+
+            let userData = document.data() ?? [:]
+            UserDefaults.standard.set(userData, forKey: "patientDetails")
+
+            DispatchQueue.main.async {
+                self.animateSlideToMainScreen()
             }
         }
     }
 
-    
-    @objc func rememberMeTapped() {
-        rememberMeButton.isSelected.toggle()
-        print("Remember me tapped. Current state: \(rememberMeButton.isSelected ? "Selected" : "Deselected")")
+    private func animateSlideToMainScreen() {
+        let mainVC = TabbarFamilyViewController()
+        let navigationController = UINavigationController(rootViewController: mainVC)
+
+        guard let window = UIApplication.shared.windows.first else { return }
+        window.addSubview(navigationController.view)
+        navigationController.view.frame = CGRect(x: window.frame.width, y: 0, width: window.frame.width, height: window.frame.height)
+
+        UIView.animate(withDuration: 0.5, animations: {
+            self.view.frame.origin.x = -self.view.frame.width
+            navigationController.view.frame = window.bounds
+        }) { _ in
+            window.rootViewController = navigationController
+            window.makeKeyAndVisible()
+        }
     }
 
+    private func animateShake(for view: UIView) {
+        let shake = CABasicAnimation(keyPath: "position")
+        shake.duration = 0.05
+        shake.repeatCount = 3
+        shake.autoreverses = true
+        shake.fromValue = NSValue(cgPoint: CGPoint(x: view.center.x - 8, y: view.center.y))
+        shake.toValue = NSValue(cgPoint: CGPoint(x: view.center.x + 8, y: view.center.y))
+        view.layer.add(shake, forKey: "position")
+    }
+    private func showLoadingAnimation() -> LottieAnimationView {
+        let animationView = LottieAnimationView(name: "loading")
+        animationView.frame = CGRect(x: 0, y: 0, width: 100, height: 100)
+        animationView.center = view.center
+        animationView.loopMode = .loop
+        animationView.animationSpeed = 1.5
+        view.addSubview(animationView)
+        animationView.play()
+        return animationView
+    }
+
+    private func stopLoadingAnimation(_ animationView: LottieAnimationView) {
+        DispatchQueue.main.async {
+            animationView.stop()
+            animationView.removeFromSuperview()
+        }
+    }
     
     @objc func logoutTapped() {
         do {
             try Auth.auth().signOut()
             GIDSignIn.sharedInstance.signOut()
-            UserDefaults.standard.removeObject(forKey: "hasCompletedProfile")
+
+            UserDefaults.standard.removeObject(forKey: Constants.UserDefaultsKeys.isFamilyMemberLoggedIn)
             UserDefaultsStorageProfile.shared.clearProfile()
+
             guard let window = UIApplication.shared.windows.first else { return }
             let welcomeVC = WelcomeViewController()
             let navigationController = UINavigationController(rootViewController: welcomeVC)
-            navigationController.view.frame = CGRect(x: 0, y: window.frame.height, width: window.frame.width, height: window.frame.height)
+
             window.rootViewController = navigationController
             window.makeKeyAndVisible()
-            UIView.animate(withDuration: 0.5, animations: {
-                self.view.frame = CGRect(x: 0, y: window.frame.height, width: window.frame.width, height: window.frame.height)
+
+            UIView.animate(withDuration: 0.5) {
+                self.view.frame.origin.y = window.frame.height
                 navigationController.view.frame = window.bounds
-            }) { _ in
-                window.rootViewController = navigationController
             }
         } catch {
-            print("Error signing out: \(error.localizedDescription)")
             showAlert(message: "Failed to log out. Please try again.")
         }
     }

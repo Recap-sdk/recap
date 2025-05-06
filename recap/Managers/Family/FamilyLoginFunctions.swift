@@ -42,11 +42,12 @@ extension FamilyLoginViewController {
                 if let storedUID = userDoc.data()["patientUID"] as? String, storedUID == patientUID {
                     UserDefaults.standard.set(userDoc.documentID, forKey: "verifiedUserDocID")
                     self.googleSignInButton.isEnabled = true
+                    self.appleSignInButton.isEnabled = true
 
                     UIView.animate(withDuration: 0.3) {
                         self.verifyButton.setTitle("Verified", for: .normal)
                         self.verifyButton.backgroundColor = AppColors.iconColor
-                        self.verifyButton.setTitleColor(.white, for: .normal) 
+                        self.verifyButton.setTitleColor(.white, for: .normal)
                     }
                     return
                 }
@@ -61,6 +62,13 @@ extension FamilyLoginViewController {
             showAlert(message: "Please verify patient UID first.")
             return
         }
+
+        guard let clientID = FirebaseApp.app()?.options.clientID else {
+            showAlert(message: "Google Sign-In not configured.")
+            return
+        }
+        let config = GIDConfiguration(clientID: clientID)
+        GIDSignIn.sharedInstance.configuration = config
 
         let loadingAnimation = self.showLoadingAnimation()
         
@@ -190,16 +198,16 @@ extension FamilyLoginViewController {
         shake.toValue = NSValue(cgPoint: CGPoint(x: view.center.x + 8, y: view.center.y))
         view.layer.add(shake, forKey: "position")
     }
-    private func showLoadingAnimation() -> LottieAnimationView {
-        let animationView = LottieAnimationView(name: "loading")
-        animationView.frame = CGRect(x: 0, y: 0, width: 100, height: 100)
-        animationView.center = view.center
-        animationView.loopMode = .loop
-        animationView.animationSpeed = 1.5
-        view.addSubview(animationView)
-        animationView.play()
-        return animationView
-    }
+//    private func showLoadingAnimation() -> LottieAnimationView {
+//        let animationView = LottieAnimationView(name: "loading")
+//        animationView.frame = CGRect(x: 0, y: 0, width: 100, height: 100)
+//        animationView.center = view.center
+//        animationView.loopMode = .loop
+//        animationView.animationSpeed = 1.5
+//        view.addSubview(animationView)
+//        animationView.play()
+//        return animationView
+//    }
 
     private func stopLoadingAnimation(_ animationView: LottieAnimationView) {
         DispatchQueue.main.async {

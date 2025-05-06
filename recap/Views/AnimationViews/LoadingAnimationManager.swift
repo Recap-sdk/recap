@@ -13,8 +13,8 @@ class LoadingAnimationManager {
 
     private init() {}
 
-    func showLoadingAnimation(on view: UIView, name: String = "loadingAnimation") -> LottieAnimationView {
-        guard let animation = LottieAnimation.named("loadingAnimation", bundle: .main) else {
+    func showLoadingAnimation(on view: UIView, name: String = "AnimationLoading") -> LottieAnimationView {
+        guard let animation = LottieAnimation.named("AnimationLoading", bundle: .main) else {
             fatalError("Lottie file not found")
         }
         let lottieView = LottieAnimationView(animation: animation)
@@ -62,7 +62,7 @@ class LoadingAnimationManager {
 
 // Optional: Extension to make it easier to use in view controllers
 extension UIViewController {
-    func showLoadingAnimation(name: String = "LoadingAnimation") -> LottieAnimationView {
+    func showLoadingAnimation(name: String = "AnimationLoading") -> LottieAnimationView {
         return LoadingAnimationManager.shared.showLoadingAnimation(on: view, name: name)
     }
 

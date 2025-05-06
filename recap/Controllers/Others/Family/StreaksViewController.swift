@@ -11,7 +11,7 @@ class StreaksViewController: UIViewController {
     let headerView = UIView()
     let streakStatsView = UIView()
     let calendarView = UIView()
-    let calendarCollectionView: UICollectionView!
+    var calendarCollectionView: UICollectionView!
     let monthYearLabel = UILabel()
     let previousMonthButton = UIButton()
     let nextMonthButton = UIButton()

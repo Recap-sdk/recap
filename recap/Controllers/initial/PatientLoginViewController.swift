@@ -139,80 +139,40 @@ class PatientLoginViewController: UIViewController {
     }()
 
     fileprivate let googleButton: UIButton = {
-        let button = UIButton(type: .system)
-        button.backgroundColor = .white
-        button.layer.cornerRadius = Constants.CardSize.DefaultCardCornerRadius
+        var config = UIButton.Configuration.filled()
+        config.baseBackgroundColor = .white
+        config.baseForegroundColor = .black
+        config.title = "Sign in with Google"
+        config.image = UIImage(named: "googleLogo")?.resized(to: CGSize(width: 24, height: 24))
+        config.imagePadding = 16
+        config.imagePlacement = .leading
+        config.cornerStyle = .medium
+
+        let button = UIButton(configuration: config)
         button.layer.borderWidth = 1
         button.layer.borderColor = UIColor.systemGray4.cgColor
-        button.titleLabel?.font = .systemFont(ofSize: 16, weight: .medium)
-
-        // Google Logo
-        let imageView = UIImageView(image: UIImage(named: "googleLogo"))
-        imageView.contentMode = .scaleAspectFit
-        imageView.translatesAutoresizingMaskIntoConstraints = false
-        imageView.widthAnchor.constraint(equalToConstant: 24).isActive = true
-        imageView.heightAnchor.constraint(equalToConstant: 24).isActive = true
-
-        // Label
-        let label = UILabel()
-        label.text = "Sign in with Google"
-        label.font = .systemFont(ofSize: 16, weight: .medium)
-        label.textColor = .black
-
-        // StackView for image + text
-        let stackView = UIStackView(arrangedSubviews: [imageView, label])
-        stackView.axis = .horizontal
-        stackView.spacing = 8
-        stackView.alignment = .center
-        stackView.translatesAutoresizingMaskIntoConstraints = false
-
-        button.addSubview(stackView)
-
-        NSLayoutConstraint.activate([
-            stackView.centerXAnchor.constraint(equalTo: button.centerXAnchor),
-            stackView.centerYAnchor.constraint(equalTo: button.centerYAnchor)
-        ])
-
+        button.layer.cornerRadius = 10
+        button.clipsToBounds = true
         return button
     }()
 
-    // Apple Sign In Button - Custom implementation with border
     fileprivate let appleButton: UIButton = {
-        let button = UIButton(type: .system)
-        button.backgroundColor = .black
-        button.layer.cornerRadius = Constants.CardSize.DefaultCardCornerRadius
-        button.titleLabel?.font = .systemFont(ofSize: 16, weight: .medium)
+        var config = UIButton.Configuration.filled()
+        config.baseBackgroundColor = .black
+        config.baseForegroundColor = .white
+        config.title = "Sign in with Apple"
 
-        // Apple Logo
-        let imageView = UIImageView(image: UIImage(systemName: "applelogo"))
-        imageView.tintColor = .white
-        imageView.contentMode = .scaleAspectFit
-        imageView.translatesAutoresizingMaskIntoConstraints = false
-        imageView.widthAnchor.constraint(equalToConstant: 24).isActive = true
-        imageView.heightAnchor.constraint(equalToConstant: 24).isActive = true
+        config.image = UIImage(named: "AppleIcon")?.resized(to: CGSize(width: 24, height: 24))
+        config.imagePadding = 16
+        config.imagePlacement = .leading
+        config.cornerStyle = .medium
 
-        // Label
-        let label = UILabel()
-        label.text = "Sign in with Apple"
-        label.font = .systemFont(ofSize: 16, weight: .medium)
-        label.textColor = .white
-
-        // StackView for image + text
-        let stackView = UIStackView(arrangedSubviews: [imageView, label])
-        stackView.axis = .horizontal
-        stackView.spacing = 8
-        stackView.alignment = .center
-        stackView.translatesAutoresizingMaskIntoConstraints = false
-
-        button.addSubview(stackView)
-
-        NSLayoutConstraint.activate([
-            stackView.centerXAnchor.constraint(equalTo: button.centerXAnchor),
-            stackView.centerYAnchor.constraint(equalTo: button.centerYAnchor)
-        ])
-
+        let button = UIButton(configuration: config)
+        button.layer.cornerRadius = 10
+        button.clipsToBounds = true
         return button
     }()
+
 
 
     private let signupButton: UIButton = {
@@ -329,4 +289,13 @@ class PatientLoginViewController: UIViewController {
 
 #Preview{
     PatientLoginViewController()
+}
+
+extension UIImage {
+    func resized(to size: CGSize) -> UIImage? {
+        let renderer = UIGraphicsImageRenderer(size: size)
+        return renderer.image { _ in
+            self.draw(in: CGRect(origin: .zero, size: size))
+        }
+    }
 }

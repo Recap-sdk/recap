@@ -1,7 +1,7 @@
 {
   "images" : [
     {
-      "filename" : "Logo.png",
+      "filename" : "WhatsApp Image 2025-05-05 at 14.58.36.jpeg",
       "idiom" : "universal",
       "platform" : "ios",
       "size" : "1024x1024"
@@ -13,7 +13,7 @@
           "value" : "dark"
         }
       ],
-      "filename" : "LogoDark.png",
+      "filename" : "appicon.png",
       "idiom" : "universal",
       "platform" : "ios",
       "size" : "1024x1024"
@@ -25,6 +25,7 @@
           "value" : "tinted"
         }
       ],
+      "filename" : "appicon 1.png",
       "idiom" : "universal",
       "platform" : "ios",
       "size" : "1024x1024"

@@ -52,8 +52,8 @@ extension AddQuestionViewController {
         }
 
         if let lastOption = optionTextFields.last {
-            // Use categoryTextField and timeFrameTextField instead of categoryButton and timeFrameButton
-            let buttonStack = UIStackView(arrangedSubviews: [categoryTextField, timeFrameTextField])
+            // Use categoryButton and timeFrameButton instead of categoryTextField and timeFrameTextField
+            let buttonStack = UIStackView(arrangedSubviews: [categoryButton, timeFrameButton])
             buttonStack.axis = .horizontal // Set the axis explicitly
             buttonStack.spacing = 20
             buttonStack.alignment = .fill // Set the alignment explicitly

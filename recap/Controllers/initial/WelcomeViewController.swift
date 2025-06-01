@@ -8,7 +8,7 @@
 //import UIKit
 //
 //class WelcomeViewController: UIViewController {
-//    
+//
 //    // MARK: - UI Components
 //    private let logoImageView: UIImageView = {
 //        let imageView = UIImageView()
@@ -16,7 +16,7 @@
 //        imageView.image = UIImage(named: "recapLogo")
 //        return imageView
 //    }()
-//    
+//
 //    private let titleLabel: UILabel = {
 //        let label = UILabel()
 //        label.text = "Recap"
@@ -25,7 +25,7 @@
 //        label.textAlignment = .center
 //        return label
 //    }()
-//    
+//
 //    private let patientButton: UIButton = {
 //        let button = UIButton()
 //        button.setTitle("Patient", for: .normal)
@@ -35,7 +35,7 @@
 //        button.titleLabel?.font = .systemFont(ofSize: 17, weight: .semibold)
 //        return button
 //    }()
-//    
+//
 //    private let familyButton: UIButton = {
 //        let button = UIButton()
 //        button.setTitle("Family", for: .normal)
@@ -45,7 +45,7 @@
 //        button.titleLabel?.font = .systemFont(ofSize: 17, weight: .semibold)
 //        return button
 //    }()
-//    
+//
 //    private let containerView: UIView = {
 //        let view = UIView()
 //        view.backgroundColor = .systemBackground
@@ -57,7 +57,7 @@
 //        view.layer.shadowOpacity = 0.1
 //        return view
 //    }()
-//    
+//
 //    private let gradientLayer: CAGradientLayer = {
 //        let gradient = CAGradientLayer()
 //        gradient.colors = [
@@ -66,39 +66,39 @@
 //            UIColor(red: 0.69, green: 0.88, blue: 0.88, alpha: 1.0).cgColor,
 //            UIColor(red: 0.94, green: 0.74, blue: 0.80, alpha: 1.0).cgColor
 //
-//            
+//
 //        ]
 ////        gradient.locations = [0.0, 1.0]
 //        gradient.startPoint = CGPoint(x: 0.0, y: 0.0)
 //        gradient.endPoint = CGPoint(x: 1.0, y: 1.0)
 //        return gradient
 //    }()
-//    
+//
 //    // MARK: - Lifecycle
 //    override func viewDidLoad() {
 //        super.viewDidLoad()
 //        setupUI()
 //        setupNavigationBar()
 //    }
-//    
+//
 //    private func setupNavigationBar() {
 //           navigationController?.setNavigationBarHidden(true, animated: false)
 //       }
-//       
+//
 //       override func viewWillAppear(_ animated: Bool) {
 //           super.viewWillAppear(animated)
 //           navigationController?.setNavigationBarHidden(true, animated: animated)
 //       }
-//       
+//
 //       override func viewWillDisappear(_ animated: Bool) {
 //           super.viewWillDisappear(animated)
 //           navigationController?.setNavigationBarHidden(false, animated: animated)
 //       }
-//    
+//
 //    // MARK: - Setup UI
 //    private func setupUI() {
 //        view.backgroundColor = .systemBackground
-//        
+//
 //        // Add gradient background
 //        let gradientLayer = CAGradientLayer()
 //        gradientLayer.colors = [
@@ -111,7 +111,7 @@
 //
 //        gradientLayer.frame = view.bounds
 //        view.layer.insertSublayer(gradientLayer, at: 0)
-//        
+//
 //        // Add subviews
 //        view.addSubview(containerView)
 //        [logoImageView, titleLabel, patientButton, familyButton].forEach {
@@ -119,7 +119,7 @@
 //            $0.translatesAutoresizingMaskIntoConstraints = false
 //        }
 //        containerView.translatesAutoresizingMaskIntoConstraints = false
-//        
+//
 //        // Setup constraints
 //        NSLayoutConstraint.activate(
 //[
@@ -127,15 +127,15 @@
 //            containerView.centerYAnchor.constraint(equalTo: view.centerYAnchor),
 //            containerView.widthAnchor.constraint(equalToConstant: 350),
 //            containerView.heightAnchor.constraint(equalToConstant: 514),
-//            
+//
 //            titleLabel.topAnchor.constraint(equalTo: containerView.topAnchor, constant: 25),
 //            titleLabel.centerXAnchor.constraint(equalTo: containerView.centerXAnchor),
-//            
+//
 //            logoImageView.topAnchor.constraint(equalTo: titleLabel.bottomAnchor, constant: 30),
 //            logoImageView.centerXAnchor.constraint(equalTo: containerView.centerXAnchor),
 //            logoImageView.widthAnchor.constraint(equalToConstant: 150),
 //            logoImageView.heightAnchor.constraint(equalToConstant: 180),
-//            
+//
 //            patientButton.topAnchor.constraint(equalTo: logoImageView.bottomAnchor, constant: 35),
 //            patientButton.leadingAnchor.constraint(equalTo: containerView.leadingAnchor, constant: 20),
 //            patientButton.trailingAnchor.constraint(equalTo: containerView.trailingAnchor, constant: -20),
@@ -143,25 +143,25 @@
 //                .constraint(
 //                    equalToConstant: Constants.ButtonStyle.DefaultButtonHeight
 //                ),
-//            
+//
 //            familyButton.topAnchor.constraint(equalTo: patientButton.bottomAnchor, constant: 16),
 //            familyButton.leadingAnchor.constraint(equalTo: containerView.leadingAnchor, constant: 20),
 //            familyButton.trailingAnchor.constraint(equalTo: containerView.trailingAnchor, constant: -20),
 //            familyButton.heightAnchor.constraint(equalToConstant: Constants.ButtonStyle.DefaultButtonHeight)
 //        ]
 //)
-//        
+//
 //        // Add button targets
 //        patientButton.addTarget(self, action: #selector(patientButtonTapped), for: .touchUpInside)
 //        familyButton.addTarget(self, action: #selector(familyButtonTapped), for: .touchUpInside)
 //    }
-//    
+//
 //    // MARK: - Actions
 //    @objc private func patientButtonTapped() {
 //           let patientLoginVC = PatientLoginViewController()
 //           navigationController?.pushViewController(patientLoginVC, animated: true)
 //       }
-//    
+//
 //    @objc private func familyButtonTapped() {
 //        print("Family button tapped")
 //        let tabBarFamilyVC = FamilyLoginViewController()

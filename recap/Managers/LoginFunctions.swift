@@ -11,6 +11,8 @@ import FirebaseFirestore
 import GoogleSignIn
 import UIKit
 import Lottie
+import AuthenticationServices
+import CryptoKit
 
 extension PatientLoginViewController {
 //    @objc func rememberMeTapped() {
@@ -301,7 +303,82 @@ extension PatientLoginViewController {
 
     @objc func appleLoginTapped() {
         print("Apple login tapped")
-        // Implement Apple login logic here
+        
+        // Show loading animation immediately before presenting Apple Sign-In
+        let loadingAnimation = self.showLoadingAnimation()
+        loadingAnimation.isHidden = true // Initially hide it
+        
+        // Start the Apple Sign In flow
+        startSignInWithAppleFlow()
+    }
+    
+    // MARK: - Apple Sign In
+    private func startSignInWithAppleFlow() {
+        print("Starting Apple Sign In flow")
+        
+        // Generate a new nonce for each sign-in attempt
+        let nonce = randomNonceString()
+        self.currentNonce = nonce
+        print("Generated nonce: \(nonce)")
+        
+        let appleIDProvider = ASAuthorizationAppleIDProvider()
+        let request = appleIDProvider.createRequest()
+        request.requestedScopes = [.fullName, .email]
+        request.nonce = sha256(nonce)
+        
+        print("Created Apple ID request with nonce hash: \(sha256(nonce))")
+        
+        // Create an authorization controller with the request
+        let authorizationController = ASAuthorizationController(authorizationRequests: [request])
+        
+        // Set delegate and presentation context provider
+        authorizationController.delegate = self
+        authorizationController.presentationContextProvider = self
+        
+        // Perform the request
+        print("Performing Apple Sign-In request")
+        authorizationController.performRequests()
+        print("Apple Sign-In request performed successfully")
+    }
+    
+    private func randomNonceString(length: Int = 32) -> String {
+        precondition(length > 0)
+        let charset: [Character] = Array("0123456789ABCDEFGHIJKLMNOPQRSTUVXYZabcdefghijklmnopqrstuvwxyz-._")
+        var result = ""
+        var remainingLength = length
+        
+        while remainingLength > 0 {
+            let randoms: [UInt8] = (0 ..< 16).map { _ in
+                var random: UInt8 = 0
+                let errorCode = SecRandomCopyBytes(kSecRandomDefault, 1, &random)
+                if errorCode != errSecSuccess {
+                    fatalError("Unable to generate nonce. SecRandomCopyBytes failed with OSStatus \(errorCode)")
+                }
+                return random
+            }
+            
+            randoms.forEach { random in
+                if remainingLength == 0 {
+                    return
+                }
+                
+                if random < charset.count {
+                    result.append(charset[Int(random)])
+                    remainingLength -= 1
+                }
+            }
+        }
+        
+        return result
+    }
+    
+    private func sha256(_ input: String) -> String {
+        let inputData = Data(input.utf8)
+        let hashedData = SHA256.hash(data: inputData)
+        let hashString = hashedData.compactMap {
+            String(format: "%02x", $0)
+        }.joined()
+        return hashString
     }
 
     @objc func logoutTapped() {
@@ -343,6 +420,129 @@ extension PatientLoginViewController {
             // Handle sign-out error
             print("Error signing out: \(error.localizedDescription)")
             showAlert(message: "Failed to log out. Please try again.")
+        }
+    }
+
+    // MARK: - ASAuthorizationControllerDelegate
+    func authorizationController(controller: ASAuthorizationController, didCompleteWithAuthorization authorization: ASAuthorization) {
+        print("Apple Sign-In authorization completed successfully")
+        
+        if let appleIDCredential = authorization.credential as? ASAuthorizationAppleIDCredential {
+            guard let nonce = currentNonce else {
+                print("ERROR: No nonce found for Apple Sign-In")
+                showAlert(message: "Apple Sign-In failed: Invalid state. Please try again.")
+                return
+            }
+            
+            // Clear current nonce after retrieving it to prevent reuse
+            currentNonce = nil
+            
+            guard let appleIDToken = appleIDCredential.identityToken else {
+                print("ERROR: No identity token received from Apple")
+                showAlert(message: "Apple Sign-In failed: Unable to fetch identity token.")
+                return
+            }
+            
+            guard let idTokenString = String(data: appleIDToken, encoding: .utf8) else {
+                print("ERROR: Unable to convert identity token to string")
+                showAlert(message: "Apple Sign-In failed: Unable to process identity token.")
+                return
+            }
+            
+            print("Successfully obtained Apple ID token")
+            
+            // Get user information
+            let userIdentifier = appleIDCredential.user
+            let fullName = appleIDCredential.fullName
+            let email = appleIDCredential.email
+            
+            print("User ID: \(userIdentifier)")
+            print("Email: \(email ?? "Not provided")")
+            print("Full Name: \(fullName?.givenName ?? "Not provided") \(fullName?.familyName ?? "")")
+            
+            // Create Firebase credential
+            let credential = OAuthProvider.credential(
+                withProviderID: "apple.com",
+                idToken: idTokenString,
+                rawNonce: nonce
+            )
+            
+            print("Created Firebase credential with Apple ID token")
+            
+            // Show loading animation
+            let loadingAnimation = self.showLoadingAnimation()
+            
+            // Sign in with Firebase
+            Auth.auth().signIn(with: credential) { [weak self] (authResult, error) in
+                guard let self = self else { return }
+                
+                // Hide loading animation
+                loadingAnimation.isHidden = true
+                
+                if let error = error {
+                    print("ERROR: Firebase sign-in failed: \(error.localizedDescription)")
+                    self.showAlert(message: "Apple Sign-In failed: \(error.localizedDescription)")
+                    return
+                }
+                
+                guard let authResult = authResult else {
+                    print("ERROR: Firebase auth result is nil")
+                    self.showAlert(message: "Apple Sign-In failed: Authentication result is missing.")
+                    return
+                }
+                
+                print("Firebase sign-in successful for user: \(authResult.user.uid)")
+                
+                // Check if this is a new user
+                let isNewUser = authResult.additionalUserInfo?.isNewUser ?? false
+                print("Is new user: \(isNewUser)")
+                
+                // Store user ID in UserDefaults
+                let userId = authResult.user.uid
+                UserDefaults.standard.set(userId, forKey: Constants.UserDefaultsKeys.verifiedUserDocID)
+                UserDefaults.standard.set(email ?? authResult.user.email ?? "", forKey: "userEmail")
+                
+                // Use the existing fetchOrCreateUserProfile function for consistency
+                self.fetchOrCreateUserProfile(userId: userId, email: email ?? authResult.user.email ?? "", loadingAnimation: loadingAnimation)
+            }
+        } else {
+            print("ERROR: Authorization credential is not an Apple ID credential")
+            showAlert(message: "Apple Sign-In failed: Invalid credential type.")
+        }
+    }
+    
+    func authorizationController(controller: ASAuthorizationController, didCompleteWithError error: Error) {
+        print("ERROR: Apple Sign-In authorization failed: \(error.localizedDescription)")
+        
+        // Clear nonce when authorization fails to prevent stale nonce
+        currentNonce = nil
+        
+        // Check for specific error types
+        if let authError = error as? ASAuthorizationError {
+            switch authError.code {
+            case .canceled:
+                print("User canceled the Apple Sign-In process")
+                // Don't show an alert for user cancellation
+            case .failed:
+                print("Apple Sign-In failed: \(authError.localizedDescription)")
+                showAlert(message: "Apple Sign-In failed. Please try again.")
+            case .invalidResponse:
+                print("Apple Sign-In received an invalid response")
+                showAlert(message: "Apple Sign-In received an invalid response. Please try again.")
+            case .notHandled:
+                print("Apple Sign-In request was not handled")
+                showAlert(message: "Apple Sign-In request was not handled. Please try again.")
+            case .unknown:
+                print("Unknown error during Apple Sign-In: \(authError.localizedDescription)")
+                showAlert(message: "An unknown error occurred during Apple Sign-In. Please try again.")
+            @unknown default:
+                print("Unhandled Apple Sign-In error: \(authError.localizedDescription)")
+                showAlert(message: "An unexpected error occurred during Apple Sign-In. Please try again.")
+            }
+        } else {
+            // Handle other types of errors
+            print("Non-ASAuthorizationError during Apple Sign-In: \(error.localizedDescription)")
+            showAlert(message: "Apple Sign-In failed: \(error.localizedDescription)")
         }
     }
 }

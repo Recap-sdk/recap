@@ -14,8 +14,8 @@ class CalendarCell: UICollectionViewCell {
         super.init(frame: frame)
 
         contentView.layer.cornerRadius = frame.width / 2
-        contentView.layer.borderWidth = 1
-        contentView.layer.borderColor = UIColor.lightGray.cgColor
+//        contentView.layer.borderWidth = 1
+//        contentView.layer.borderColor = UIColor.lightGray.cgColor
         contentView.clipsToBounds = true
         
         dayLabel.font = UIFont.systemFont(ofSize: 16)

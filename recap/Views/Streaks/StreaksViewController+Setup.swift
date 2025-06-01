@@ -49,7 +49,7 @@ extension StreaksViewController {
             self.maxStreakLabel.text = "\(maxStreak)"
             self.currentStreakLabel.text = "\(currentStreak)"
             self.activeDaysLabel.text = "\(activeDays)"
-
+            
             // Store values persistently
             UserDefaults.standard.set(maxStreak, forKey: "maxStreak")
             UserDefaults.standard.set(currentStreak, forKey: "currentStreak")
@@ -106,18 +106,18 @@ extension StreaksViewController {
         
         NSLayoutConstraint.activate([
             streakStatsView.topAnchor.constraint(equalTo: view.safeAreaLayoutGuide.topAnchor, constant: 12),
-            streakStatsView.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: 16),
-            streakStatsView.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -16),
+            streakStatsView.leadingAnchor.constraint(equalTo: view.safeAreaLayoutGuide.leadingAnchor, constant: 16),
+            streakStatsView.trailingAnchor.constraint(equalTo: view.safeAreaLayoutGuide.trailingAnchor, constant: -16),
             streakStatsView.heightAnchor.constraint(equalToConstant: 80),
             
             streakStatsStackView.leadingAnchor.constraint(equalTo: streakStatsView.leadingAnchor, constant: 16),
             streakStatsStackView.trailingAnchor.constraint(equalTo: streakStatsView.trailingAnchor, constant: -16),
-            streakStatsStackView.topAnchor.constraint(equalTo: streakStatsView.topAnchor, constant: 12),
-            streakStatsStackView.bottomAnchor.constraint(equalTo: streakStatsView.bottomAnchor, constant: -12),
+            streakStatsStackView.topAnchor.constraint(equalTo: streakStatsView.safeAreaLayoutGuide.topAnchor, constant: 12),
+            streakStatsStackView.bottomAnchor.constraint(equalTo: streakStatsView.safeAreaLayoutGuide.bottomAnchor, constant: -12),
             
             // Info button constraints
-            infoButton.topAnchor.constraint(equalTo: streakStatsView.topAnchor, constant: 8),
-            infoButton.trailingAnchor.constraint(equalTo: streakStatsView.trailingAnchor, constant: -8),
+            infoButton.topAnchor.constraint(equalTo: streakStatsView.safeAreaLayoutGuide.topAnchor, constant: 8),
+            infoButton.trailingAnchor.constraint(equalTo: streakStatsView.safeAreaLayoutGuide.trailingAnchor, constant: -8),
             infoButton.widthAnchor.constraint(equalToConstant: 24),
             infoButton.heightAnchor.constraint(equalToConstant: 24)
         ])
@@ -126,6 +126,15 @@ extension StreaksViewController {
     // Action for info button tap
     @objc func infoButtonTapped() {
         showInfoCard()
+    }
+    
+    // Add these constants inside your StreaksViewController class or extension
+    private struct CalendarLayoutConstants {
+        static let horizontalPadding: CGFloat = 16.0 // Padding inside the main calendarView
+        static let verticalPadding: CGFloat = 16.0
+        static let interitemSpacing: CGFloat = 4.0 // Horizontal space between cells
+        static let lineSpacing: CGFloat = 8.0      // Vertical space between rows of cells
+        static let numberOfColumns: CGFloat = 7.0
     }
     
     // Method to show the info card
@@ -161,9 +170,9 @@ extension StreaksViewController {
         infoLabel.numberOfLines = 0
         infoLabel.text = """
         • Max Streak: The longest streak you've ever achieved without a break.
-
+        
         • Current Streak: The consecutive days your current streak is going on.
-
+        
         • Active Days: The number of days you answered a question since you downloaded the app.
         """
         infoLabel.font = UIFont.systemFont(ofSize: 16)
@@ -178,27 +187,32 @@ extension StreaksViewController {
             infoCard.widthAnchor.constraint(equalTo: view.widthAnchor, multiplier: 0.85),
             infoCard.heightAnchor.constraint(equalToConstant: 280),
             
-            closeButton.topAnchor.constraint(equalTo: infoCard.topAnchor, constant: 16),
-            closeButton.trailingAnchor.constraint(equalTo: infoCard.trailingAnchor, constant: -16),
+            closeButton.topAnchor.constraint(equalTo: infoCard.safeAreaLayoutGuide.topAnchor, constant: 16),
+            closeButton.trailingAnchor.constraint(equalTo: infoCard.safeAreaLayoutGuide.trailingAnchor, constant: -16),
             closeButton.widthAnchor.constraint(equalToConstant: 30),
             closeButton.heightAnchor.constraint(equalToConstant: 30),
             
-            titleLabel.topAnchor.constraint(equalTo: infoCard.topAnchor, constant: 24),
-            titleLabel.leadingAnchor.constraint(equalTo: infoCard.leadingAnchor, constant: 16),
-            titleLabel.trailingAnchor.constraint(equalTo: infoCard.trailingAnchor, constant: -16),
+            titleLabel.topAnchor.constraint(equalTo: infoCard.safeAreaLayoutGuide.topAnchor, constant: 24),
+            titleLabel.leadingAnchor.constraint(equalTo: infoCard.safeAreaLayoutGuide.leadingAnchor, constant: 16),
+            titleLabel.trailingAnchor.constraint(equalTo: infoCard.safeAreaLayoutGuide.trailingAnchor, constant: -16),
             
             infoLabel.topAnchor.constraint(equalTo: titleLabel.bottomAnchor, constant: 16),
-            infoLabel.leadingAnchor.constraint(equalTo: infoCard.leadingAnchor, constant: 24),
-            infoLabel.trailingAnchor.constraint(equalTo: infoCard.trailingAnchor, constant: -24),
-            infoLabel.bottomAnchor.constraint(equalTo: infoCard.bottomAnchor, constant: -24)
+            infoLabel.leadingAnchor.constraint(equalTo: infoCard.safeAreaLayoutGuide.leadingAnchor, constant: 24),
+            infoLabel.trailingAnchor.constraint(equalTo: infoCard.safeAreaLayoutGuide.trailingAnchor, constant: -24),
+            infoLabel.bottomAnchor.constraint(equalTo: infoCard.safeAreaLayoutGuide.bottomAnchor, constant: -24)
         ])
         
         // Add a blurred background
-        let blurEffect = UIBlurEffect(style: .dark)
+        let blurEffect = UIBlurEffect(style: .systemMaterial)
         let blurredView = UIVisualEffectView(effect: blurEffect)
-        blurredView.frame = view.bounds
-        blurredView.alpha = 0.5
+        blurredView.translatesAutoresizingMaskIntoConstraints = false
         view.insertSubview(blurredView, belowSubview: infoCard)
+        NSLayoutConstraint.activate([
+            blurredView.topAnchor.constraint(equalTo: view.topAnchor),
+            blurredView.bottomAnchor.constraint(equalTo: view.bottomAnchor),
+            blurredView.leadingAnchor.constraint(equalTo: view.leadingAnchor),
+            blurredView.trailingAnchor.constraint(equalTo: view.trailingAnchor)
+        ])
         
         // Animate the appearance of the info card
         infoCard.transform = CGAffineTransform(scaleX: 0.8, y: 0.8)
@@ -392,7 +406,7 @@ extension StreaksViewController {
                     self.headerView.heightAnchor.constraint(equalToConstant: 140),  // Increased height to accommodate bigger container
                     
                     // Title label constraints
-                    titleLabel.topAnchor.constraint(equalTo: self.headerView.topAnchor, constant: 16),
+                    titleLabel.topAnchor.constraint(equalTo: self.headerView.safeAreaLayoutGuide.topAnchor, constant: 16),
                     titleLabel.centerXAnchor.constraint(equalTo: self.headerView.centerXAnchor),
                     
                     daysStackView.leadingAnchor.constraint(equalTo: self.headerView.leadingAnchor, constant: 16),
@@ -468,49 +482,52 @@ extension StreaksViewController {
     }
     
     // MARK: - Setup Calendar View
+    
     func setupCalendarView() {
-        // Calendar View setup with modern styling
+        // Calendar View setup
         calendarView.backgroundColor = .white
         calendarView.layer.cornerRadius = Constants.CardSize.DefaultCardCornerRadius
         calendarView.layer.shadowColor = UIColor.black.cgColor
-        calendarView.layer.shadowOpacity = 0.15
-        calendarView.layer.shadowOffset = CGSize(width: 0, height: 3)
-        calendarView.layer.shadowRadius = 8
+        calendarView.layer.shadowOpacity = 0.1
+        calendarView.layer.shadowOffset = CGSize(width: 0, height: 2) // Subtle shadow
+        calendarView.layer.shadowRadius = 6
         calendarView.translatesAutoresizingMaskIntoConstraints = false
         view.addSubview(calendarView)
         
-        // Previous Month Button setup with modern icon
+        // --- Header ---
         previousMonthButton.setImage(UIImage(systemName: "chevron.left.circle.fill"), for: .normal)
         previousMonthButton.tintColor = AppColors.iconColor
         previousMonthButton.addTarget(self, action: #selector(handlePreviousMonth), for: .touchUpInside)
         previousMonthButton.translatesAutoresizingMaskIntoConstraints = false
         
-        // Next Month Button setup with modern icon
         nextMonthButton.setImage(UIImage(systemName: "chevron.right.circle.fill"), for: .normal)
         nextMonthButton.tintColor = AppColors.iconColor
         nextMonthButton.addTarget(self, action: #selector(handleNextMonth), for: .touchUpInside)
         nextMonthButton.translatesAutoresizingMaskIntoConstraints = false
         
-        // Month-Year Label setup with modern typography
         monthYearLabel.text = formattedMonthYear()
-        monthYearLabel.font = UIFont.systemFont(ofSize: 22, weight: .bold)
+        monthYearLabel.font = UIFont.systemFont(ofSize: 20, weight: .semibold) // Slightly adjusted font
         monthYearLabel.textColor = AppColors.primaryTextColor
         monthYearLabel.textAlignment = .center
         monthYearLabel.translatesAutoresizingMaskIntoConstraints = false
         
-        // Calendar Header Stack setup
         let calendarHeaderStack = UIStackView(arrangedSubviews: [previousMonthButton, monthYearLabel, nextMonthButton])
         calendarHeaderStack.axis = .horizontal
         calendarHeaderStack.alignment = .center
-        calendarHeaderStack.distribution = .equalSpacing
+        // Distribute space: Give month label more room, buttons fixed size
+        monthYearLabel.setContentHuggingPriority(.defaultLow, for: .horizontal)
+        previousMonthButton.setContentHuggingPriority(.defaultHigh, for: .horizontal)
+        nextMonthButton.setContentHuggingPriority(.defaultHigh, for: .horizontal)
+        calendarHeaderStack.distribution = .fill // Allow month label to expand
+        calendarHeaderStack.spacing = 8
         calendarHeaderStack.translatesAutoresizingMaskIntoConstraints = false
         calendarView.addSubview(calendarHeaderStack)
         
-        // Add weekday labels
+        // --- Weekday Labels ---
         let weekdayStack = UIStackView()
         weekdayStack.axis = .horizontal
-        weekdayStack.distribution = .fillEqually
-        weekdayStack.spacing = 0
+        weekdayStack.distribution = .fillEqually // Distribute equally
+        weekdayStack.spacing = CalendarLayoutConstants.interitemSpacing // Match item spacing
         weekdayStack.translatesAutoresizingMaskIntoConstraints = false
         calendarView.addSubview(weekdayStack)
         
@@ -524,48 +541,54 @@ extension StreaksViewController {
             weekdayStack.addArrangedSubview(label)
         }
         
-        // Modify the collection view layout to ensure 7 days per row
+        // --- Collection View Layout ---
         let layout = UICollectionViewFlowLayout()
-        // Calculate item width to fit 7 days per row (with some padding)
-        let availableWidth = UIScreen.main.bounds.width - 32 - 32 // Screen width minus leading and trailing constraints
-        let itemWidth = (availableWidth - 6 * 4) / 7 // 6 spaces between 7 items, each 4 points wide
-        layout.itemSize = CGSize(width: itemWidth, height: itemWidth)
-        layout.minimumInteritemSpacing = 4
-        layout.minimumLineSpacing = 8
-        calendarCollectionView.collectionViewLayout = layout
+        // *** REMOVE fixed item size calculation here ***
+        // Let the delegate handle item size dynamically
+        layout.minimumInteritemSpacing = CalendarLayoutConstants.interitemSpacing
+        layout.minimumLineSpacing = CalendarLayoutConstants.lineSpacing
+        // Add section insets to match the horizontal padding used for constraints
+        layout.sectionInset = UIEdgeInsets(top: 0, left: 0, bottom: 0, right: 0) // Insets are handled by collection view constraints now
         
-        // Calendar Collection View setup
+        // --- Calendar Collection View ---
+        calendarCollectionView = UICollectionView(frame: .zero, collectionViewLayout: layout)
         calendarCollectionView.register(CalendarCell.self, forCellWithReuseIdentifier: "CalendarCell")
         calendarCollectionView.dataSource = self
-        calendarCollectionView.delegate = self
-        calendarCollectionView.backgroundColor = .white
+        calendarCollectionView.delegate = self // *** SET DELEGATE ***
+        calendarCollectionView.backgroundColor = .clear // Make background transparent
+        calendarCollectionView.showsHorizontalScrollIndicator = false
+        calendarCollectionView.showsVerticalScrollIndicator = false
         calendarCollectionView.translatesAutoresizingMaskIntoConstraints = false
         calendarView.addSubview(calendarCollectionView)
         
-        // Constraints for the calendar view and its subviews
+        // --- Constraints ---
         NSLayoutConstraint.activate([
-            // Calendar View constraints
+            // Calendar View
             calendarView.topAnchor.constraint(equalTo: headerView.bottomAnchor, constant: 16),
             calendarView.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: 16),
             calendarView.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -16),
-            calendarView.heightAnchor.constraint(equalToConstant: 390), // Made slightly taller to accommodate weekday labels
+            // Adjust height based on content or make it flexible if needed
+            // A fixed height might still work if calculated carefully, but flexible is often better
+            calendarView.heightAnchor.constraint(equalToConstant: 380), // Adjusted height slightly
             
-            // Calendar Header Stack constraints
-            calendarHeaderStack.topAnchor.constraint(equalTo: calendarView.topAnchor, constant: 16),
-            calendarHeaderStack.leadingAnchor.constraint(equalTo: calendarView.leadingAnchor, constant: 16),
-            calendarHeaderStack.trailingAnchor.constraint(equalTo: calendarView.trailingAnchor, constant: -16),
+            // Header Stack (Month/Year + Buttons)
+            calendarHeaderStack.topAnchor.constraint(equalTo: calendarView.topAnchor, constant: CalendarLayoutConstants.verticalPadding),
+            calendarHeaderStack.leadingAnchor.constraint(equalTo: calendarView.leadingAnchor, constant: CalendarLayoutConstants.horizontalPadding),
+            calendarHeaderStack.trailingAnchor.constraint(equalTo: calendarView.trailingAnchor, constant: -CalendarLayoutConstants.horizontalPadding),
+            calendarHeaderStack.heightAnchor.constraint(equalToConstant: 30), // Fixed height for header
             
-            // Weekday Stack constraints
-            weekdayStack.topAnchor.constraint(equalTo: calendarHeaderStack.bottomAnchor, constant: 16),
-            weekdayStack.leadingAnchor.constraint(equalTo: calendarView.leadingAnchor, constant: 16),
-            weekdayStack.trailingAnchor.constraint(equalTo: calendarView.trailingAnchor, constant: -16),
-            weekdayStack.heightAnchor.constraint(equalToConstant: 20),
+            // Weekday Stack
+            weekdayStack.topAnchor.constraint(equalTo: calendarHeaderStack.bottomAnchor, constant: 12), // Space below header
+            weekdayStack.leadingAnchor.constraint(equalTo: calendarView.leadingAnchor, constant: CalendarLayoutConstants.horizontalPadding),
+            weekdayStack.trailingAnchor.constraint(equalTo: calendarView.trailingAnchor, constant: -CalendarLayoutConstants.horizontalPadding),
+            weekdayStack.heightAnchor.constraint(equalToConstant: 20), // Fixed height for weekdays
             
-            // Calendar Collection View constraints
-            calendarCollectionView.topAnchor.constraint(equalTo: weekdayStack.bottomAnchor, constant: 8),
-            calendarCollectionView.leadingAnchor.constraint(equalTo: calendarView.leadingAnchor, constant: 16),
-            calendarCollectionView.trailingAnchor.constraint(equalTo: calendarView.trailingAnchor, constant: -16),
-            calendarCollectionView.bottomAnchor.constraint(equalTo: calendarView.bottomAnchor, constant: -16)
+            // Calendar Collection View
+            calendarCollectionView.topAnchor.constraint(equalTo: weekdayStack.bottomAnchor, constant: 8), // Space below weekdays
+            // Use the SAME padding as the weekdayStack and headerStack for alignment
+            calendarCollectionView.leadingAnchor.constraint(equalTo: calendarView.leadingAnchor, constant: CalendarLayoutConstants.horizontalPadding),
+            calendarCollectionView.trailingAnchor.constraint(equalTo: calendarView.trailingAnchor, constant: -CalendarLayoutConstants.horizontalPadding),
+            calendarCollectionView.bottomAnchor.constraint(equalTo: calendarView.bottomAnchor, constant: -CalendarLayoutConstants.verticalPadding) // Pin to bottom with padding
         ])
     }
 }

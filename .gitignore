@@ -1,3 +1,49 @@
+xcuserdata/
+*.xcuserdatad
+**/xcuserdata/
+**/*.xcuserdatad
+
+## Build generated
+build/
+DerivedData/
+
+# Swift Package Manager
+.build/
+
+# CocoaPods
+Pods/
+*.xcworkspace
+
+# Carthage
+Carthage/Build/
+
+# Fastlane
+fastlane/report.xml
+fastlane/Preview.html
+fastlane/screenshots/**/*.png
+fastlane/test_output/ # Added trailing slash for clarity, it's a directory
+
+# Code Injection
+injected_code/
+
+# Mac OS X
+.DS_Store
+.AppleDouble
+.LSOverride
+._*
+.Spotlight-V100
+.Trashes
+
+.DocumentRevisions-V100
+.fseventsd
+.TemporaryItems
+.VolumeIcon.icns
+.com.apple.timemachine.donotpresent
+
+# Editor/IDE specific (good to add generally)
+.vscode/
+*.swp
+*~
 # Xcode
 ## User settings
 xcuserdata/

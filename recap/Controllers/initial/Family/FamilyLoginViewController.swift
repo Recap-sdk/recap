@@ -12,6 +12,7 @@ import UIKit
 class FamilyLoginViewController: UIViewController {
     var verifiedUserDocID: String?
     var isRemembered = true
+    var currentNonce: String? // Required for Apple Sign-In
 
     // MARK: - UI Components
 

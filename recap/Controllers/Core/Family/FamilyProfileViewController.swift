@@ -8,7 +8,7 @@
 import UIKit
 
 class FamilyProfileViewController: UIViewController, UITableViewDelegate, UITableViewDataSource {
-    
+
     private let profileImageView: UIImageView = {
         let imageView = UIImageView()
         imageView.image = UIImage(systemName: "person.circle.fill")
@@ -47,14 +47,13 @@ class FamilyProfileViewController: UIViewController, UITableViewDelegate, UITabl
         return button
     }()
 
-
     override func viewDidLoad() {
         super.viewDidLoad()
         view.backgroundColor = .systemBackground
         setupNavigationBar()
         setupUI()
         setupTableView()
-        loadUserData();
+        loadUserData()
     }
 
     private func setupNavigationBar() {
@@ -84,7 +83,8 @@ class FamilyProfileViewController: UIViewController, UITableViewDelegate, UITabl
         logoutButton.translatesAutoresizingMaskIntoConstraints = false
 
         NSLayoutConstraint.activate([
-            profileImageView.topAnchor.constraint(equalTo: view.safeAreaLayoutGuide.topAnchor, constant: 20),
+            profileImageView.topAnchor.constraint(
+                equalTo: view.safeAreaLayoutGuide.topAnchor, constant: 20),
             profileImageView.centerXAnchor.constraint(equalTo: view.centerXAnchor),
             profileImageView.widthAnchor.constraint(equalToConstant: 120),
             profileImageView.heightAnchor.constraint(equalToConstant: 120),
@@ -96,11 +96,12 @@ class FamilyProfileViewController: UIViewController, UITableViewDelegate, UITabl
             tableView.topAnchor.constraint(equalTo: nameLabel.bottomAnchor, constant: 20),
             tableView.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: 20),
             tableView.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -20),
-            tableView.bottomAnchor.constraint(equalTo: view.bottomAnchor, constant: -120), // Increased space for logout button
+            tableView.bottomAnchor.constraint(equalTo: view.bottomAnchor, constant: -120),  // Increased space for logout button
 
             logoutButton.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: 20),
             logoutButton.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -20),
-            logoutButton.bottomAnchor.constraint(equalTo: view.safeAreaLayoutGuide.bottomAnchor, constant: -40),
+            logoutButton.bottomAnchor.constraint(
+                equalTo: view.safeAreaLayoutGuide.bottomAnchor, constant: -40),
             logoutButton.heightAnchor.constraint(equalToConstant: 50),
         ])
 
@@ -120,7 +121,7 @@ class FamilyProfileViewController: UIViewController, UITableViewDelegate, UITabl
     }
 
     func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
-        return 4
+        return 5  // Added "Delete Account" option
     }
 
     func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
@@ -128,15 +129,30 @@ class FamilyProfileViewController: UIViewController, UITableViewDelegate, UITabl
         cell.accessoryType = .disclosureIndicator
         cell.contentView.layoutMargins = UIEdgeInsets(top: 0, left: 20, bottom: 0, right: 20)
 
-        let titles = ["Patients", "About App", "Language", "Privacy"]
+        let titles = ["Patients", "About App", "Language", "Privacy", "Delete Account"]
         cell.textLabel?.text = titles[indexPath.row]
         cell.backgroundColor = .white
+
+        // Special styling for Delete Account cell
+        if indexPath.row == 4 {
+            cell.textLabel?.textColor = .systemRed
+            cell.imageView?.image = UIImage(systemName: "trash")
+            cell.imageView?.tintColor = .systemRed
+        }
 
         return cell
     }
 
     func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
         tableView.deselectRow(at: indexPath, animated: true)
+
+        if indexPath.row == 4 {
+            // Handle Delete Account selection
+            let deleteAccountVC = DeleteFamilyAccountViewController()
+            let navController = UINavigationController(rootViewController: deleteAccountVC)
+            present(navController, animated: true)
+            return
+        }
 
         let viewController: UIViewController
         switch indexPath.row {
@@ -153,32 +169,36 @@ class FamilyProfileViewController: UIViewController, UITableViewDelegate, UITabl
         }
         navigationController?.pushViewController(viewController, animated: true)
     }
-    
+
     private func loadUserData() {
-        if let familyData = UserDefaults.standard.dictionary(forKey: Constants.UserDefaultsKeys.familyMemberDetails),
-        let name = familyData["name"] as? String {
+        if let familyData = UserDefaults.standard.dictionary(
+            forKey: Constants.UserDefaultsKeys.familyMemberDetails),
+            let name = familyData["name"] as? String
+        {
             nameLabel.text = name
         } else {
             nameLabel.text = "Unknown Family"
         }
-        
+
         let placeholderImage = UIImage(systemName: "person.circle.fill")?
             .withTintColor(AppColors.iconColor, renderingMode: .alwaysOriginal)
 
-        if let imageUrl = UserDefaults.standard.string(forKey: Constants.UserDefaultsKeys.familyMemberImageURL),
-            let url = URL(string: imageUrl) {
+        if let imageUrl = UserDefaults.standard.string(
+            forKey: Constants.UserDefaultsKeys.familyMemberImageURL),
+            let url = URL(string: imageUrl)
+        {
             profileImageView.sd_setImage(with: url, placeholderImage: placeholderImage)
         } else {
             profileImageView.image = placeholderImage
         }
     }
-    
+
     @objc private func logoutTapped() {
         let familyLoginExtension = FamilyLoginViewController()
         familyLoginExtension.logoutTapped()
     }
 }
 
-#Preview{
+#Preview {
     FamilyProfileViewController()
 }

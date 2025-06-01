@@ -14,9 +14,9 @@
 //class ProfileViewController: UIViewController {
 //    private var userDetails: [String: Any]?
 //    private let dataFetchManager: DataFetchProtocol = DataFetch()
-//    
+//
 //    private var dataProtocol: FamilyStorageProtocol
-//    
+//
 //    init(
 //        storage: FamilyStorageProtocol = UserDefaultsStorageFamilyMember.shared
 //    ) {
@@ -239,7 +239,7 @@
 //    func numberOfSections(in tableView: UITableView) -> Int {
 //        return 3
 //    }
-//    
+//
 //    func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
 //        switch section {
 //        case 0: return 6
@@ -248,16 +248,16 @@
 //        default: return 0
 //        }
 //    }
-//    
+//
 //    func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
 //        let cell = UITableViewCell(style: .value1, reuseIdentifier: "cell")
-//        
+//
 //        if indexPath.section == 1 {
 //            cell.accessoryType = .disclosureIndicator
 //        } else {
 //            cell.accessoryType = .none
 //        }
-//        
+//
 //        switch indexPath.section {
 //        case 0:
 //            let titles = [
@@ -281,19 +281,19 @@
 //                }
 //                return Array(repeating: "Not Set", count: 6)
 //            }()
-//            
+//
 //            cell.textLabel?.text = titles[indexPath.row]
 //            cell.detailTextLabel?.text = values[indexPath.row]
 //            cell.textLabel?.font = .systemFont(ofSize: 17)
 //            cell.selectionStyle = .none
-//            
+//
 //        case 1:
 //            cell.textLabel?.text = "Memory Check"
 //            cell.detailTextLabel?.text = "Last check: Fetching"
 //            cell.imageView?.image = UIImage(systemName: "brain.head.profile")
 //            cell.imageView?.tintColor = AppColors.iconColor
 //            cell.selectionStyle = .default
-//            
+//
 //        case 2:
 //            cell.textLabel?.text = "Logout"
 //            cell.textLabel?.textColor = .white
@@ -301,17 +301,17 @@
 //            cell.backgroundColor = .systemRed
 //            cell.textLabel?.textAlignment = .center
 //            cell.selectionStyle = .default
-//            
+//
 //        default:
 //            break
 //        }
-//        
+//
 //        return cell
 //    }
-//    
+//
 //    func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
 //        tableView.deselectRow(at: indexPath, animated: true)
-//        
+//
 //        if indexPath.section == 1 && indexPath.row == 0 {
 //            let memoryCheckVC = MemoryCheckViewController()
 //            memoryCheckVC.preloadedQuestions = prefetchedQuestions
@@ -321,7 +321,7 @@
 //            loginVC.logoutTapped()
 //        }
 //    }
-//    
+//
 //    func tableView(_ tableView: UITableView, titleForHeaderInSection section: Int) -> String? {
 //        switch section {
 //        case 0: return "Personal Information"
@@ -329,7 +329,7 @@
 //        default: return nil
 //        }
 //    }
-//    
+//
 //    func tableView(_ tableView: UITableView, titleForFooterInSection section: Int) -> String? {
 //        switch section {
 //        case 0: return "This information helps us personalize your experience."
@@ -347,18 +347,18 @@
 //}
 //#Preview {ProfileViewController()}
 
+import FirebaseAuth
+import FirebaseFirestore
 import Foundation
 import SDWebImage
 import UIKit
-import FirebaseAuth
-import FirebaseFirestore
 
 class ProfileViewController: UIViewController {
     private var userDetails: [String: Any]?
     private let dataFetchManager: DataFetchProtocol = DataFetch()
-    
+
     private var dataProtocol: FamilyStorageProtocol
-    
+
     init(
         storage: FamilyStorageProtocol = UserDefaultsStorageFamilyMember.shared
     ) {
@@ -470,10 +470,12 @@ class ProfileViewController: UIViewController {
 
             if let profile = userProfile {
                 print("Profile fetched: \(profile)")
-                UserDefaultsStorageProfile.shared.saveProfile(details: profile, image: nil) { success in
+                UserDefaultsStorageProfile.shared.saveProfile(details: profile, image: nil) {
+                    success in
                     if success {
                         self.updateUI(with: profile)
-                        self.dataFetchManager.fetchLastMemoryCheck(userId: userId) { [weak self] date in
+                        self.dataFetchManager.fetchLastMemoryCheck(userId: userId) {
+                            [weak self] date in
                             DispatchQueue.main.async {
                                 self?.updateMemoryCheckDate(date)
                             }
@@ -487,12 +489,15 @@ class ProfileViewController: UIViewController {
     }
 
     private func updateUI(with details: [String: Any]) {
-        nameLabel.text = "\(details["firstName"] as? String ?? "Not Set") \(details["lastName"] as? String ?? "Not Set")"
+        nameLabel.text =
+            "\(details["firstName"] as? String ?? "Not Set") \(details["lastName"] as? String ?? "Not Set")"
         uidLabel.text = details["patientUID"] as? String ?? "Not Set"
 
         if let profileImageURL = details["profileImageURL"] as? String, !profileImageURL.isEmpty,
-           let url = URL(string: profileImageURL) {
-            profileImageView.sd_setImage(with: url, placeholderImage: UIImage(named: "person.circle"))
+            let url = URL(string: profileImageURL)
+        {
+            profileImageView.sd_setImage(
+                with: url, placeholderImage: UIImage(named: "person.circle"))
         } else {
             profileImageView.image = UIImage(named: "person.circle")
         }
@@ -510,7 +515,8 @@ class ProfileViewController: UIViewController {
 
     private func setupNavigationBar() {
         navigationItem.largeTitleDisplayMode = .never
-        let doneButton = UIBarButtonItem(title: "Done", style: .done, target: self, action: #selector(doneButtonTapped))
+        let doneButton = UIBarButtonItem(
+            title: "Done", style: .done, target: self, action: #selector(doneButtonTapped))
         navigationItem.rightBarButtonItem = doneButton
         doneButton.tintColor = AppColors.iconColor
     }
@@ -535,7 +541,8 @@ class ProfileViewController: UIViewController {
         profileImageView.layer.masksToBounds = true
 
         NSLayoutConstraint.activate([
-            profileImageView.topAnchor.constraint(equalTo: view.safeAreaLayoutGuide.topAnchor, constant: 20),
+            profileImageView.topAnchor.constraint(
+                equalTo: view.safeAreaLayoutGuide.topAnchor, constant: 20),
             profileImageView.centerXAnchor.constraint(equalTo: view.centerXAnchor),
             profileImageView.widthAnchor.constraint(equalToConstant: 95),
             profileImageView.heightAnchor.constraint(equalToConstant: 95),
@@ -550,14 +557,17 @@ class ProfileViewController: UIViewController {
             uidCardView.heightAnchor.constraint(equalToConstant: 44),
 
             patientIDLabel.centerYAnchor.constraint(equalTo: uidCardView.centerYAnchor),
-            patientIDLabel.leadingAnchor.constraint(equalTo: uidCardView.leadingAnchor, constant: 16),
+            patientIDLabel.leadingAnchor.constraint(
+                equalTo: uidCardView.leadingAnchor, constant: 16),
 
             uidLabel.centerYAnchor.constraint(equalTo: uidCardView.centerYAnchor),
             uidLabel.leadingAnchor.constraint(equalTo: patientIDLabel.trailingAnchor, constant: 8),
-            uidLabel.trailingAnchor.constraint(lessThanOrEqualTo: copyButton.leadingAnchor, constant: -8),
+            uidLabel.trailingAnchor.constraint(
+                lessThanOrEqualTo: copyButton.leadingAnchor, constant: -8),
 
             copyButton.centerYAnchor.constraint(equalTo: uidCardView.centerYAnchor),
-            copyButton.trailingAnchor.constraint(equalTo: uidCardView.trailingAnchor, constant: -16),
+            copyButton.trailingAnchor.constraint(
+                equalTo: uidCardView.trailingAnchor, constant: -16),
             copyButton.widthAnchor.constraint(equalToConstant: 30),
             copyButton.heightAnchor.constraint(equalToConstant: 30),
 
@@ -568,7 +578,8 @@ class ProfileViewController: UIViewController {
 
             logoutButton.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: 20),
             logoutButton.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -20),
-            logoutButton.bottomAnchor.constraint(equalTo: view.safeAreaLayoutGuide.bottomAnchor, constant: -20),
+            logoutButton.bottomAnchor.constraint(
+                equalTo: view.safeAreaLayoutGuide.bottomAnchor, constant: -20),
             logoutButton.heightAnchor.constraint(equalToConstant: 50),
         ])
     }
@@ -592,7 +603,8 @@ class ProfileViewController: UIViewController {
     }
 
     private func showCopyConfirmation() {
-        let alert = UIAlertController(title: "Copied!", message: "Patient ID copied to clipboard.", preferredStyle: .alert)
+        let alert = UIAlertController(
+            title: "Copied!", message: "Patient ID copied to clipboard.", preferredStyle: .alert)
         alert.addAction(UIAlertAction(title: "OK", style: .default, handler: nil))
         present(alert, animated: true)
     }
@@ -602,26 +614,27 @@ class ProfileViewController: UIViewController {
 
 extension ProfileViewController: UITableViewDelegate, UITableViewDataSource {
     func numberOfSections(in tableView: UITableView) -> Int {
-        return 2 // Personal Information and Health
+        return 3  // Personal Information, Health, and Account Management
     }
-    
+
     func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
         switch section {
         case 0: return 6
         case 1: return 1
+        case 2: return 1  // Delete Account option
         default: return 0
         }
     }
-    
+
     func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
         let cell = UITableViewCell(style: .value1, reuseIdentifier: "cell")
-        
+
         if indexPath.section == 1 {
             cell.accessoryType = .disclosureIndicator
         } else {
             cell.accessoryType = .none
         }
-        
+
         switch indexPath.section {
         case 0:
             let titles = [
@@ -645,36 +658,49 @@ extension ProfileViewController: UITableViewDelegate, UITableViewDataSource {
                 }
                 return Array(repeating: "Not Set", count: 6)
             }()
-            
+
             cell.textLabel?.text = titles[indexPath.row]
             cell.detailTextLabel?.text = values[indexPath.row]
             cell.textLabel?.font = .systemFont(ofSize: 17)
             cell.selectionStyle = .none
-            
+
         case 1:
             cell.textLabel?.text = "Memory Check"
             cell.detailTextLabel?.text = "Last check: Fetching"
             cell.imageView?.image = UIImage(systemName: "brain.head.profile")
             cell.imageView?.tintColor = AppColors.iconColor
             cell.selectionStyle = .default
-            
+
+        case 2:
+            cell.textLabel?.text = "Delete Account"
+            cell.textLabel?.textColor = .systemRed
+            cell.imageView?.image = UIImage(systemName: "trash")
+            cell.imageView?.tintColor = .systemRed
+            cell.accessoryType = .disclosureIndicator
+            cell.selectionStyle = .default
+
         default:
             break
         }
-        
+
         return cell
     }
-    
+
     func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
         tableView.deselectRow(at: indexPath, animated: true)
-        
+
         if indexPath.section == 1 && indexPath.row == 0 {
             let memoryCheckVC = MemoryCheckViewController()
             memoryCheckVC.preloadedQuestions = prefetchedQuestions
             navigationController?.pushViewController(memoryCheckVC, animated: true)
+        } else if indexPath.section == 2 && indexPath.row == 0 {
+            // Delete account option tapped
+            let deleteAccountVC = DeleteAccountViewController()
+            let navController = UINavigationController(rootViewController: deleteAccountVC)
+            present(navController, animated: true)
         }
     }
-    
+
     func tableView(_ tableView: UITableView, titleForHeaderInSection section: Int) -> String? {
         switch section {
         case 0: return "Personal Information"
@@ -682,7 +708,7 @@ extension ProfileViewController: UITableViewDelegate, UITableViewDataSource {
         default: return nil
         }
     }
-    
+
     func tableView(_ tableView: UITableView, titleForFooterInSection section: Int) -> String? {
         switch section {
         case 0: return "This information helps us personalize your experience."
@@ -698,4 +724,4 @@ extension ProfileViewController: UITableViewDelegate, UITableViewDataSource {
         }
     }
 }
-#Preview {ProfileViewController()}
+#Preview { ProfileViewController() }

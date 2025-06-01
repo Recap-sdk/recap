@@ -5,11 +5,11 @@
 //  Created by khushi on 22/03/25.
 //
 
-import UIKit
 import SafariServices
+import UIKit
 
 class ArticleDetailViewController: UIViewController {
-    
+
     private let article: Article
 
     // MARK: - UI Elements
@@ -31,7 +31,7 @@ class ArticleDetailViewController: UIViewController {
         let imageView = UIImageView()
         imageView.contentMode = .scaleAspectFill
         imageView.clipsToBounds = true
-        imageView.layer.cornerRadius = 0 // Full width image
+        imageView.layer.cornerRadius = 0  // Full width image
         imageView.translatesAutoresizingMaskIntoConstraints = false
         return imageView
     }()
@@ -92,6 +92,42 @@ class ArticleDetailViewController: UIViewController {
         return button
     }()
 
+    private let sourceLabel: UILabel = {
+        let label = UILabel()
+        label.font = UIFont.systemFont(ofSize: 14, weight: .semibold)
+        label.textColor = .darkGray
+        label.text = "Source:"
+        label.translatesAutoresizingMaskIntoConstraints = false
+        return label
+    }()
+
+    private let sourceValueLabel: UILabel = {
+        let label = UILabel()
+        label.font = UIFont.systemFont(ofSize: 14)
+        label.textColor = .darkGray
+        label.numberOfLines = 0
+        label.translatesAutoresizingMaskIntoConstraints = false
+        return label
+    }()
+
+    private let citationDividerView: UIView = {
+        let view = UIView()
+        view.backgroundColor = UIColor.gray.withAlphaComponent(0.3)
+        view.translatesAutoresizingMaskIntoConstraints = false
+        return view
+    }()
+
+    private let medicalDisclaimerLabel: UILabel = {
+        let label = UILabel()
+        label.font = UIFont.italicSystemFont(ofSize: 13)
+        label.textColor = UIColor.darkGray
+        label.numberOfLines = 0
+        label.text =
+            "Medical Disclaimer: The information provided in this article is for educational purposes only and is not intended as medical advice. Always consult with a healthcare professional before making any medical decisions."
+        label.translatesAutoresizingMaskIntoConstraints = false
+        return label
+    }()
+
     // MARK: - Initialization
 
     init(article: Article) {
@@ -118,13 +154,13 @@ class ArticleDetailViewController: UIViewController {
     private func setupView() {
         view.backgroundColor = .white
         navigationItem.largeTitleDisplayMode = .never
-        
+
         // Add scroll view to main view
         view.addSubview(scrollView)
-        
+
         // Add content view to scroll view
         scrollView.addSubview(contentView)
-        
+
         // Add elements to content view
         contentView.addSubview(imageView)
         contentView.addSubview(titleLabel)
@@ -134,6 +170,10 @@ class ArticleDetailViewController: UIViewController {
         contentView.addSubview(dividerView)
         contentView.addSubview(contentLabel)
         contentView.addSubview(readMoreButton)
+        contentView.addSubview(sourceLabel)
+        contentView.addSubview(sourceValueLabel)
+        contentView.addSubview(citationDividerView)
+        contentView.addSubview(medicalDisclaimerLabel)
     }
 
     private func setupConstraints() {
@@ -143,56 +183,91 @@ class ArticleDetailViewController: UIViewController {
             scrollView.leadingAnchor.constraint(equalTo: view.leadingAnchor),
             scrollView.trailingAnchor.constraint(equalTo: view.trailingAnchor),
             scrollView.bottomAnchor.constraint(equalTo: view.safeAreaLayoutGuide.bottomAnchor),
-            
+
             // Content View
             contentView.topAnchor.constraint(equalTo: scrollView.topAnchor),
             contentView.leadingAnchor.constraint(equalTo: scrollView.leadingAnchor),
             contentView.trailingAnchor.constraint(equalTo: scrollView.trailingAnchor),
             contentView.bottomAnchor.constraint(equalTo: scrollView.bottomAnchor),
             contentView.widthAnchor.constraint(equalTo: scrollView.widthAnchor),
-            
+
             // Image View - Full width at the top
             imageView.topAnchor.constraint(equalTo: contentView.topAnchor),
             imageView.leadingAnchor.constraint(equalTo: contentView.leadingAnchor),
             imageView.trailingAnchor.constraint(equalTo: contentView.trailingAnchor),
             imageView.heightAnchor.constraint(equalToConstant: 250),
-            
+
             // Title Label
             titleLabel.topAnchor.constraint(equalTo: imageView.bottomAnchor, constant: 24),
             titleLabel.leadingAnchor.constraint(equalTo: contentView.leadingAnchor, constant: 20),
-            titleLabel.trailingAnchor.constraint(equalTo: contentView.trailingAnchor, constant: -20),
-            
+            titleLabel.trailingAnchor.constraint(
+                equalTo: contentView.trailingAnchor, constant: -20),
+
             // Metadata View
             metadataView.topAnchor.constraint(equalTo: titleLabel.bottomAnchor, constant: 16),
             metadataView.leadingAnchor.constraint(equalTo: contentView.leadingAnchor, constant: 20),
-            metadataView.trailingAnchor.constraint(equalTo: contentView.trailingAnchor, constant: -20),
+            metadataView.trailingAnchor.constraint(
+                equalTo: contentView.trailingAnchor, constant: -20),
             metadataView.heightAnchor.constraint(equalToConstant: 20),
-            
+
             // Author Label
             authorLabel.leadingAnchor.constraint(equalTo: metadataView.leadingAnchor),
             authorLabel.centerYAnchor.constraint(equalTo: metadataView.centerYAnchor),
-            
+
             // Read Time Label
             readTimeLabel.trailingAnchor.constraint(equalTo: metadataView.trailingAnchor),
             readTimeLabel.centerYAnchor.constraint(equalTo: metadataView.centerYAnchor),
-            
+
             // Divider
             dividerView.topAnchor.constraint(equalTo: metadataView.bottomAnchor, constant: 16),
             dividerView.leadingAnchor.constraint(equalTo: contentView.leadingAnchor, constant: 20),
-            dividerView.trailingAnchor.constraint(equalTo: contentView.trailingAnchor, constant: -20),
+            dividerView.trailingAnchor.constraint(
+                equalTo: contentView.trailingAnchor, constant: -20),
             dividerView.heightAnchor.constraint(equalToConstant: 1),
-            
+
             // Content Label
             contentLabel.topAnchor.constraint(equalTo: dividerView.bottomAnchor, constant: 16),
             contentLabel.leadingAnchor.constraint(equalTo: contentView.leadingAnchor, constant: 20),
-            contentLabel.trailingAnchor.constraint(equalTo: contentView.trailingAnchor, constant: -20),
-            
+            contentLabel.trailingAnchor.constraint(
+                equalTo: contentView.trailingAnchor, constant: -20),
+
             // Read More Button
             readMoreButton.topAnchor.constraint(equalTo: contentLabel.bottomAnchor, constant: 32),
             readMoreButton.centerXAnchor.constraint(equalTo: contentView.centerXAnchor),
             readMoreButton.widthAnchor.constraint(equalToConstant: 200),
             readMoreButton.heightAnchor.constraint(equalToConstant: 50),
-            readMoreButton.bottomAnchor.constraint(equalTo: contentView.bottomAnchor, constant: -32)
+
+            // Source Label
+            sourceLabel.topAnchor.constraint(equalTo: readMoreButton.bottomAnchor, constant: 32),
+            sourceLabel.leadingAnchor.constraint(equalTo: contentView.leadingAnchor, constant: 20),
+            sourceLabel.trailingAnchor.constraint(
+                equalTo: contentView.trailingAnchor, constant: -20),
+
+            // Source Value Label
+            sourceValueLabel.topAnchor.constraint(equalTo: sourceLabel.bottomAnchor, constant: 8),
+            sourceValueLabel.leadingAnchor.constraint(
+                equalTo: contentView.leadingAnchor, constant: 20),
+            sourceValueLabel.trailingAnchor.constraint(
+                equalTo: contentView.trailingAnchor, constant: -20),
+
+            // Citation Divider
+            citationDividerView.topAnchor.constraint(
+                equalTo: sourceValueLabel.bottomAnchor, constant: 16),
+            citationDividerView.leadingAnchor.constraint(
+                equalTo: contentView.leadingAnchor, constant: 20),
+            citationDividerView.trailingAnchor.constraint(
+                equalTo: contentView.trailingAnchor, constant: -20),
+            citationDividerView.heightAnchor.constraint(equalToConstant: 1),
+
+            // Medical Disclaimer Label
+            medicalDisclaimerLabel.topAnchor.constraint(
+                equalTo: citationDividerView.bottomAnchor, constant: 16),
+            medicalDisclaimerLabel.leadingAnchor.constraint(
+                equalTo: contentView.leadingAnchor, constant: 20),
+            medicalDisclaimerLabel.trailingAnchor.constraint(
+                equalTo: contentView.trailingAnchor, constant: -20),
+            medicalDisclaimerLabel.bottomAnchor.constraint(
+                equalTo: contentView.bottomAnchor, constant: -32),
         ])
     }
 
@@ -209,6 +284,7 @@ class ArticleDetailViewController: UIViewController {
         authorLabel.text = "By \(article.author)"
         contentLabel.text = article.content
         readTimeLabel.text = calculateReadTime(for: article.content)
+        sourceValueLabel.text = article.source  // Assuming Article model has a 'source' property
     }
 
     // MARK: - Actions
@@ -225,14 +301,14 @@ class ArticleDetailViewController: UIViewController {
     private func calculateReadTime(for text: String) -> String {
         // Average reading speed: 200-250 words per minute
         let wordsPerMinute = 150
-        
+
         // Count words in the text
         let words = text.components(separatedBy: .whitespacesAndNewlines)
         let wordCount = words.filter { !$0.isEmpty }.count
-        
+
         // Calculate reading time in minutes
         let readTimeMinutes = max(1, Int(ceil(Double(wordCount) / Double(wordsPerMinute))))
-        
+
         if readTimeMinutes == 1 {
             return "1 min read"
         } else {

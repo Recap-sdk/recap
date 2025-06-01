@@ -6,12 +6,19 @@
 //
 
 import AuthenticationServices
+import CryptoKit
+import FirebaseAuth
 import GoogleSignIn
 import UIKit
+import FirebaseFirestore
+import Lottie
 
-class PatientLoginViewController: UIViewController {
+
+class PatientLoginViewController: UIViewController, ASAuthorizationControllerDelegate, ASAuthorizationControllerPresentationContextProviding {
+
     var isRemembered = true
 
+    var currentNonce: String?
     // MARK: - UI Components
 
     private let logoImageView: UIImageView = {
@@ -203,6 +210,260 @@ class PatientLoginViewController: UIViewController {
     @objc func dismissKeyboard() {
         view.endEditing(true)
     }
+    
+    // MARK: - ASAuthorizationControllerPresentationContextProviding
+
+        func presentationAnchor(for controller: ASAuthorizationController) -> ASPresentationAnchor {
+
+            return view.window!
+
+        }
+
+
+
+        // MARK: - User Profile Management
+
+        
+
+        private func fetchOrCreateUserProfile(userId: String, email: String, loadingAnimation: LottieAnimationView) {
+
+            let db = Firestore.firestore()
+
+
+
+            db.collection("users").document(userId).getDocument { [weak self] document, error in
+
+                guard let self = self else { return }
+
+
+
+                if let error = error {
+
+                    self.removeLoadingAnimation(loadingAnimation)
+
+                    print("Error fetching user profile: \(error.localizedDescription)")
+
+                    self.showAlert(message: "Failed to fetch user profile.")
+
+                    return
+
+                }
+
+
+
+                if let document = document, document.exists {
+
+                    // Existing user profile found
+
+                    let userData = document.data() ?? [:]
+
+                    
+
+                    // Check if profile is complete by verifying required fields
+
+                    let requiredFields = ["firstName", "lastName", "dateOfBirth", "sex", "bloodGroup", "stage"]
+
+                    let isProfileComplete = requiredFields.allSatisfy { field in
+
+                        guard let value = userData[field] as? String else { return false }
+
+                        return !value.isEmpty
+
+                    }
+
+                    
+
+                    if isProfileComplete {
+
+                        // Profile is complete, navigate to main view
+
+                        print("User profile is complete, navigating to main view")
+
+                        UserDefaults.standard.set(true, forKey: Constants.UserDefaultsKeys.isPatientLoggedIn)
+
+                        UserDefaults.standard.set(true, forKey: Constants.UserDefaultsKeys.hasPatientCompletedProfile)
+
+                        UserDefaults.standard.synchronize()
+
+                        
+
+                        self.removeLoadingAnimation(loadingAnimation)
+
+                        let tabBarVC = TabbarViewController()
+
+                        self.navigationController?.setViewControllers([tabBarVC], animated: true)
+
+                    } else {
+
+                        // Profile exists but is incomplete, navigate to profile completion
+
+                        print("User profile is incomplete, navigating to profile completion")
+
+                        self.removeLoadingAnimation(loadingAnimation)
+
+                        let patientInfoVC = patientInfo()
+
+                        // Set the delegate to SceneDelegate to handle navigation after profile completion
+
+                        if let sceneDelegate = UIApplication.shared.connectedScenes.first?.delegate as? SceneDelegate {
+
+                            patientInfoVC.delegate = sceneDelegate
+
+                        }
+
+                        let nav = UINavigationController(rootViewController: patientInfoVC)
+
+                        nav.modalPresentationStyle = .pageSheet  // Change from .fullScreen to .pageSheet
+
+                        self.present(nav, animated: true)
+
+                    }
+
+                } else {
+
+                    // New user, generate unique patient ID and save profile
+
+                    self.generateUniquePatientID { patientUID in
+
+                        guard let patientUID = patientUID else {
+
+                            self.removeLoadingAnimation(loadingAnimation)
+
+                            print("Failed to generate unique Patient ID.")
+
+                            self.showAlert(message: "Unable to create profile. Please try again.")
+
+                            return
+
+                        }
+
+
+
+                        // Initial data structure
+
+                        let initialData: [String: Any] = [
+
+                            "email": email,
+
+                            "patientUID": patientUID,
+
+                            "firstName": "",
+
+                            "lastName": "",
+
+                            "dateOfBirth": "",
+
+                            "sex": "",
+
+                            "bloodGroup": "",
+
+                            "stage": "",
+
+                            "profileImageURL": "",
+
+                            "familyMembers": [],
+
+                            "type": "patient",
+
+                        ]
+
+
+
+                        // Save the initial user profile to Firestore
+
+                        db.collection("users").document(userId).setData(initialData) { error in
+
+                            if let error = error {
+
+                                self.removeLoadingAnimation(loadingAnimation)
+
+                                print("Error saving initial user profile: \(error.localizedDescription)")
+
+                                self.showAlert(message: "Failed to create profile. Please try again.")
+
+                            } else {
+
+                                print("New user profile created successfully")
+
+                                self.removeLoadingAnimation(loadingAnimation)
+
+                                let patientInfoVC = patientInfo()
+
+                                // Set the delegate to SceneDelegate to handle navigation after profile completion
+
+                                if let sceneDelegate = UIApplication.shared.connectedScenes.first?.delegate as? SceneDelegate {
+
+                                    patientInfoVC.delegate = sceneDelegate
+
+                                }
+
+                                let nav = UINavigationController(rootViewController: patientInfoVC)
+
+                                nav.modalPresentationStyle = .pageSheet  // Change from .fullScreen to .pageSheet
+
+                                self.present(nav, animated: true)
+
+                            }
+
+                        }
+
+                    }
+
+                }
+
+            }
+
+        }
+
+        
+
+        private func generateUniquePatientID(completion: @escaping (String?) -> Void) {
+
+            let db = Firestore.firestore()
+
+            
+
+            // Generate a random 6-digit number
+
+            let randomNum = Int.random(in: 100000...999999)
+
+            let patientUID = "P\(randomNum)"
+
+            
+
+            // Check if this ID already exists
+
+            db.collection("users").whereField("patientUID", isEqualTo: patientUID).getDocuments { snapshot, error in
+
+                if let error = error {
+
+                    print("Error checking for existing patient ID: \(error.localizedDescription)")
+
+                    completion(nil)
+
+                    return
+
+                }
+
+                
+
+                if let snapshot = snapshot, snapshot.isEmpty {
+
+                    // ID is unique, return it
+
+                    completion(patientUID)
+
+                } else {
+
+                    // ID already exists, try again
+
+                    self.generateUniquePatientID(completion: completion)
+
+                }
+
+            }
+
+        }
 
     // MARK: - Setup UI
 

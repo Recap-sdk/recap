@@ -1,1 +1,45 @@
-*/xcuserdata/
+# Xcode
+## User settings
+xcuserdata/
+*.xcuserdata
+**/xcuserdata/
+*.xcuserdatad
+**/*.xcuserdatad
+
+## Build generated
+build/
+DerivedData/
+
+# Mac OS X
+.DS_Store
+.AppleDouble
+.LSOverride
+._*
+
+# Files that might appear in the root of a volume
+.DocumentRevisions-V100
+.fseventsd
+.Spotlight-V100
+.TemporaryItems
+.Trashes
+.VolumeIcon.icns
+.com.apple.timemachine.donotpresent
+
+# Swift Package Manager
+.build/
+
+# CocoaPods
+Pods/
+*.xcworkspace
+
+# Carthage
+Carthage/Build/
+
+# Fastlane
+fastlane/report.xml
+fastlane/Preview.html
+fastlane/screenshots/**/*.png
+fastlane/test_output
+
+# Code Injection
+injected_code/

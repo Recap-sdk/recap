@@ -10,7 +10,7 @@ import UIKit
 class FamilyProfileViewController: UIViewController, UITableViewDelegate, UITableViewDataSource {
     // Property to store prefetched citations
     private var prefetchedCitations: [Citation]?
-    private let menuTitles = ["Patients", "About App", "Language", "Privacy", "Sources", "Delete Account"]
+    private let menuTitles = ["Patients", "About App", "Language", "Privacy", "Medical Information Citations", "Delete Account"]
 
     private let profileImageView: UIImageView = {
         let imageView = UIImageView()

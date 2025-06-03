@@ -14,6 +14,7 @@ protocol DataFetchProtocol {
     func fetchFamilyMembers(userId: String, completion: @escaping ([FamilyMember]?, Error?) -> Void)
     func fetchLastMemoryCheck(userId: String, completion: @escaping (String) -> Void)
     func fetchArticles(completion: @escaping ([Article]?, Error?) -> Void)
+    func fetchCitations(completion: @escaping ([Citation]?, Error?) -> Void)
 }
 
 class DataFetch: DataFetchProtocol {
@@ -140,6 +141,45 @@ class DataFetch: DataFetchProtocol {
             group.notify(queue: .main) {
                 completion(articles, nil)
             }
+        }
+    }
+
+    func fetchCitations(completion: @escaping ([Citation]?, Error?) -> Void) {
+        firestore.collection("Citations").getDocuments { (snapshot, error) in
+            if let error = error {
+                print("Error fetching citations: \(error.localizedDescription)")
+                completion(nil, error)
+                return
+            }
+
+            let citations = snapshot?.documents.compactMap { document -> Citation? in
+                let data = document.data()
+
+                guard let title = data["title"] as? String,
+                    let source = data["source"] as? String,
+                    let authors = data["authors"] as? String,
+                    let journal = data["journal"] as? String,
+                    let year = data["year"] as? String
+                else {
+                    return nil
+                }
+
+                let doi = data["doi"] as? String
+                let urlString = data["url"] as? String
+                let url = urlString != nil ? URL(string: urlString!) : nil
+
+                return Citation(
+                    title: title,
+                    source: source,
+                    authors: authors,
+                    journal: journal,
+                    year: year,
+                    doi: doi,
+                    url: url
+                )
+            }
+
+            completion(citations, nil)
         }
     }
 

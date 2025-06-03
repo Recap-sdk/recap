@@ -15,8 +15,7 @@ struct rapiMemory: Codable, FireBaseDecodable {
     var correctAnswer: String = ""
     var memoryType: MemoryType = .distant
     var EntityName: String = "rapidMemoryQuestions"
-    
-    
+
     init(id: String, fireData: Any) {
         self.id = id
         if let data = fireData as? [String: Any] {
@@ -24,17 +23,17 @@ struct rapiMemory: Codable, FireBaseDecodable {
             self.options = data["options"] as? [String] ?? []
             self.correctAnswer = data["correctAnswer"] as? String ?? ""
             self.memoryType = MemoryType(rawValue: data["memoryType"] as? String ?? "") ?? .distant
-            
+
         }
     }
 }
 
 // Memory Type Classification
 enum MemoryType: String, Codable {
-    case distant    // Long-term memories from years ago
+    case distant  // Long-term memories from years ago
     case immediate  // Very recent memories (minutes/hours)
-    case remote     // Memories from weeks/months ago
-    
+    case remote  // Memories from weeks/months ago
+
     var description: String {
         switch self {
         case .distant:
@@ -45,6 +44,12 @@ enum MemoryType: String, Codable {
             return "Recent Memory"
         }
     }
+
+    // Source information for memory type definitions
+    var sourceInformation: String {
+        "Based on established cognitive psychology and neuroscience research. "
+            + "See \"Citations\" section for detailed sources."
+    }
 }
 
 // Memory Assessment Result
@@ -52,16 +57,16 @@ struct MemoryAssessment {
     let totalScore: Int
     let totalQuestions: Int
     let typeScores: [MemoryType: (correct: Int, total: Int)]
-    
+
     var overallPercentage: Double {
         return Double(totalScore) / Double(totalQuestions) * 100
     }
-    
+
     func percentageFor(type: MemoryType) -> Double {
         guard let score = typeScores[type] else { return 0 }
         return Double(score.correct) / Double(score.total) * 100
     }
-    
+
     var status: String {
         switch overallPercentage {
         case 80...100:
@@ -74,17 +79,18 @@ struct MemoryAssessment {
             return "Memory function needs improvement"
         }
     }
-    
+
     var recommendations: [String] {
         var recommendations: [String] = []
-        
+
         // Add type-specific recommendations
         for (type, score) in typeScores {
             let percentage = Double(score.correct) / Double(score.total) * 100
             if percentage < 60 {
                 switch type {
                 case .distant:
-                    recommendations.append("Practice recalling old memories through photos or journaling")
+                    recommendations.append(
+                        "Practice recalling old memories through photos or journaling")
                 case .immediate:
                     recommendations.append("Try memory games or puzzles for short-term recall")
                 case .remote:
@@ -92,15 +98,28 @@ struct MemoryAssessment {
                 }
             }
         }
-        
+
         // Add general recommendations
         recommendations.append(contentsOf: [
             "Maintain a regular sleep schedule",
             "Stay physically active",
-            "Engage in social activities"
+            "Engage in social activities",
         ])
-        
+
         return recommendations
+    }
+
+    // Citation information for the assessment
+    var citationInformation: String {
+        // Return a hardcoded citation since we can't rely on MedicalCitationsManager here
+        return
+            "Based on research from: Kivipelto, M., Mangialasche, F. & Ngandu, T. (2018). Lifestyle interventions to prevent cognitive impairment, dementia and Alzheimer disease. Nature Reviews Neurology."
+    }
+
+    // Medical disclaimer text
+    var medicalDisclaimer: String {
+        return
+            "Medical Disclaimer: The information provided is for educational purposes only and is not intended as medical advice. Always consult with a healthcare professional before making any medical decisions."
     }
 }
 
@@ -110,16 +129,16 @@ struct RapidMemoryQuiz {
         var typeScores: [MemoryType: (correct: Int, total: Int)] = [
             .distant: (0, 0),
             .immediate: (0, 0),
-            .remote: (0, 0)
+            .remote: (0, 0),
         ]
-        
+
         // Calculate scores
         for (index, question) in questions.enumerated() {
             let isCorrect = answers[index] == question.correctAnswer
             if isCorrect {
                 totalScore += 1
             }
-            
+
             // Update type-specific scores
             var currentScore = typeScores[question.memoryType] ?? (0, 0)
             currentScore.total += 1
@@ -128,7 +147,7 @@ struct RapidMemoryQuiz {
             }
             typeScores[question.memoryType] = currentScore
         }
-        
+
         return MemoryAssessment(
             totalScore: totalScore,
             totalQuestions: questions.count,

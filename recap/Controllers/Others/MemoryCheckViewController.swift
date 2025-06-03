@@ -1,9 +1,9 @@
-import UIKit
 import Firebase
 import FirebaseAuth
+import UIKit
 
 class MemoryCheckViewController: UIViewController {
-    
+
     // MARK: - UI Components
     private let questionLabel: UILabel = {
         let label = UILabel()
@@ -12,7 +12,7 @@ class MemoryCheckViewController: UIViewController {
         label.font = .boldSystemFont(ofSize: 22)
         return label
     }()
-    
+
     private let optionsStackView: UIStackView = {
         let stack = UIStackView()
         stack.axis = .horizontal
@@ -20,7 +20,7 @@ class MemoryCheckViewController: UIViewController {
         stack.distribution = .fillEqually
         return stack
     }()
-    
+
     private let submitButton: UIButton = {
         let button = UIButton()
         button.setTitle("Submit", for: .normal)
@@ -31,14 +31,14 @@ class MemoryCheckViewController: UIViewController {
         button.isEnabled = false
         return button
     }()
-    
+
     private let progressLabel: UILabel = {
         let label = UILabel()
         label.textAlignment = .center
         label.font = Constants.FontandColors.descriptionFont
         return label
     }()
-    
+
     // MARK: - Properties
     private var questions = [rapiMemory]()
     private var currentQuestionIndex = 0
@@ -47,7 +47,7 @@ class MemoryCheckViewController: UIViewController {
     private var userAnswers: [String] = []
     var preloadedQuestions: [rapiMemory]?
     private var viewModel: MemoryViewModelProtocol?
-    
+
     // MARK: - Lifecycle
     override func viewDidLoad() {
         super.viewDidLoad()
@@ -66,33 +66,36 @@ class MemoryCheckViewController: UIViewController {
     private func setupUI() {
         view.backgroundColor = .systemBackground
         title = "Memory Check"
-        
+
         [questionLabel, optionsStackView, submitButton, progressLabel].forEach {
             $0.translatesAutoresizingMaskIntoConstraints = false
             view.addSubview($0)
         }
-        
+
         NSLayoutConstraint.activate([
-            questionLabel.topAnchor.constraint(equalTo: view.safeAreaLayoutGuide.topAnchor, constant: 40),
+            questionLabel.topAnchor.constraint(
+                equalTo: view.safeAreaLayoutGuide.topAnchor, constant: 40),
             questionLabel.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: 20),
             questionLabel.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -20),
-            
-            optionsStackView.topAnchor.constraint(equalTo: questionLabel.bottomAnchor, constant: 40),
+
+            optionsStackView.topAnchor.constraint(
+                equalTo: questionLabel.bottomAnchor, constant: 40),
             optionsStackView.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: 20),
             optionsStackView.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -20),
-            
+
             submitButton.bottomAnchor.constraint(equalTo: progressLabel.topAnchor, constant: -20),
             submitButton.centerXAnchor.constraint(equalTo: view.centerXAnchor),
             submitButton.widthAnchor.constraint(equalToConstant: 200),
             submitButton.heightAnchor.constraint(equalToConstant: 44),
-            
-            progressLabel.bottomAnchor.constraint(equalTo: view.safeAreaLayoutGuide.bottomAnchor, constant: -20),
-            progressLabel.centerXAnchor.constraint(equalTo: view.centerXAnchor)
+
+            progressLabel.bottomAnchor.constraint(
+                equalTo: view.safeAreaLayoutGuide.bottomAnchor, constant: -20),
+            progressLabel.centerXAnchor.constraint(equalTo: view.centerXAnchor),
         ])
-        
+
         submitButton.addTarget(self, action: #selector(submitButtonTapped), for: .touchUpInside)
     }
-    
+
     // MARK: - Fetch Questions from Firebase
     private func fetchQuestions() {
         viewModel?.fetchQuestions(completion: { [weak self] result in
@@ -104,29 +107,30 @@ class MemoryCheckViewController: UIViewController {
                 }
             case .failure(let error):
                 DispatchQueue.main.async {
-                    let alert = UIAlertController(title: "Error",
-                                                  message: "Failed to load questions: \(error.localizedDescription)",
-                                                  preferredStyle: .alert)
+                    let alert = UIAlertController(
+                        title: "Error",
+                        message: "Failed to load questions: \(error.localizedDescription)",
+                        preferredStyle: .alert)
                     alert.addAction(UIAlertAction(title: "OK", style: .default))
                     self?.present(alert, animated: true)
                 }
             }
         })
     }
-    
+
     // MARK: - Display Current Question
     private func displayCurrentQuestion() {
         guard currentQuestionIndex < questions.count else {
             showResults()
             return
         }
-        
+
         let question = questions[currentQuestionIndex]
         questionLabel.text = question.text
-        
+
         // Clear previous options
         optionsStackView.arrangedSubviews.forEach { $0.removeFromSuperview() }
-        
+
         // Add option buttons
         question.options.forEach { option in
             let button = UIButton()
@@ -138,38 +142,40 @@ class MemoryCheckViewController: UIViewController {
             button.addTarget(self, action: #selector(optionSelected(_:)), for: .touchUpInside)
             optionsStackView.addArrangedSubview(button)
         }
-        
+
         progressLabel.text = "Question \(currentQuestionIndex + 1) of \(questions.count)"
         submitButton.isEnabled = false
     }
-    
+
     // MARK: - Actions
     @objc private func optionSelected(_ sender: UIButton) {
-        optionsStackView.arrangedSubviews.forEach { ($0 as? UIButton)?.backgroundColor = .systemGray }
+        optionsStackView.arrangedSubviews.forEach {
+            ($0 as? UIButton)?.backgroundColor = .systemGray
+        }
         sender.backgroundColor = .systemBlue
         selectedAnswer = sender.title(for: .normal)
         submitButton.isEnabled = true
     }
-    
+
     @objc private func submitButtonTapped() {
         guard let selectedAnswer = selectedAnswer else { return }
-        
+
         // Store the answer
         userAnswers.append(selectedAnswer)
-        
+
         currentQuestionIndex += 1
         self.selectedAnswer = nil
-        
+
         if currentQuestionIndex < questions.count {
             displayCurrentQuestion()
         } else {
             showResults()
         }
     }
-    
+
     private func showResults() {
         let assessment = RapidMemoryQuiz.evaluateMemory(answers: userAnswers, questions: questions)
-        
+
         let reportId = generateReportId()
 
         // Prepare the report data
@@ -180,45 +186,65 @@ class MemoryCheckViewController: UIViewController {
             "status": assessment.status,
             "typeScores": typeScoresToFirestoreFormat(assessment.typeScores),
             "overallPercentage": assessment.overallPercentage,
-            "recommendations": assessment.recommendations
+            "recommendations": assessment.recommendations,
         ]
 
         // Upload the report to Firebase
-        DataUploadManager().uploadMemoryCheckReport(userId: Auth.auth().currentUser?.uid ?? "", reportId: reportId, data: reportData)
-        
+        DataUploadManager().uploadMemoryCheckReport(
+            userId: Auth.auth().currentUser?.uid ?? "", reportId: reportId, data: reportData)
+
         // Display the results to the user
-        var message = "Overall Score: \(assessment.totalScore) out of \(assessment.totalQuestions)\n\n"
+        var message =
+            "Overall Score: \(assessment.totalScore) out of \(assessment.totalQuestions)\n\n"
         message += "Memory Type Breakdown:\n"
-        
+
         for type in [MemoryType.immediate, .remote, .distant] {
             let percentage = assessment.percentageFor(type: type)
             message += "\(type.description): \(Int(percentage))%\n"
         }
-        
+
         message += "\nStatus: \(assessment.status)\n\n"
         message += "Recommendations:\n"
         assessment.recommendations.forEach { message += "• \($0)\n" }
-        
+
+        // Add citation information
+        message +=
+            "\n\nSource: Based on research from cognitive psychology and neuroscience literature."
+
         let alertController = UIAlertController(
             title: "Memory Assessment Complete",
             message: message,
             preferredStyle: .alert
         )
-        
-        alertController.addAction(UIAlertAction(title: "OK", style: .default) { [weak self] _ in
-            self?.navigationController?.popViewController(animated: true)
-        })
-        
+
+        // Add view citations action
+        alertController.addAction(
+            UIAlertAction(title: "View Citations", style: .default) { [weak self] _ in
+                self?.showCitations()
+            })
+
+        alertController.addAction(
+            UIAlertAction(title: "OK", style: .default) { [weak self] _ in
+                self?.navigationController?.popViewController(animated: true)
+            })
+
         present(alertController, animated: true)
     }
 
+    private func showCitations() {
+        let citationsVC = CitationsViewController()
+        navigationController?.pushViewController(citationsVC, animated: true)
+    }
+
     // Convert typeScores to Firestore-friendly format
-    private func typeScoresToFirestoreFormat(_ typeScores: [MemoryType: (correct: Int, total: Int)]) -> [[String: Any]] {
+    private func typeScoresToFirestoreFormat(_ typeScores: [MemoryType: (correct: Int, total: Int)])
+        -> [[String: Any]]
+    {
         return typeScores.map { (memoryType, score) in
             return [
                 "memoryType": memoryType.rawValue,
                 "correct": score.correct,
-                "total": score.total
+                "total": score.total,
             ]
         }
     }
@@ -229,9 +255,9 @@ class MemoryCheckViewController: UIViewController {
         formatter.dateFormat = "yyyy-MM-dd"
         return formatter.string(from: Date())
     }
-    
+
 }
 
-#Preview{
+#Preview {
     MemoryCheckViewController()
 }

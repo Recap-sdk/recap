@@ -110,6 +110,24 @@ class ArticleDetailViewController: UIViewController {
         return label
     }()
 
+    private let citationLabel: UILabel = {
+        let label = UILabel()
+        label.font = UIFont.systemFont(ofSize: 14, weight: .semibold)
+        label.textColor = .darkGray
+        label.text = "Citation:"
+        label.translatesAutoresizingMaskIntoConstraints = false
+        return label
+    }()
+
+    private let citationValueLabel: UILabel = {
+        let label = UILabel()
+        label.font = UIFont.systemFont(ofSize: 14)
+        label.textColor = .darkGray
+        label.numberOfLines = 0
+        label.translatesAutoresizingMaskIntoConstraints = false
+        return label
+    }()
+
     private let citationDividerView: UIView = {
         let view = UIView()
         view.backgroundColor = UIColor.gray.withAlphaComponent(0.3)
@@ -172,6 +190,8 @@ class ArticleDetailViewController: UIViewController {
         contentView.addSubview(readMoreButton)
         contentView.addSubview(sourceLabel)
         contentView.addSubview(sourceValueLabel)
+        contentView.addSubview(citationLabel)
+        contentView.addSubview(citationValueLabel)
         contentView.addSubview(citationDividerView)
         contentView.addSubview(medicalDisclaimerLabel)
     }
@@ -250,9 +270,25 @@ class ArticleDetailViewController: UIViewController {
             sourceValueLabel.trailingAnchor.constraint(
                 equalTo: contentView.trailingAnchor, constant: -20),
 
+            // Citation Label
+            citationLabel.topAnchor.constraint(
+                equalTo: sourceValueLabel.bottomAnchor, constant: 16),
+            citationLabel.leadingAnchor.constraint(
+                equalTo: contentView.leadingAnchor, constant: 20),
+            citationLabel.trailingAnchor.constraint(
+                equalTo: contentView.trailingAnchor, constant: -20),
+
+            // Citation Value Label
+            citationValueLabel.topAnchor.constraint(
+                equalTo: citationLabel.bottomAnchor, constant: 8),
+            citationValueLabel.leadingAnchor.constraint(
+                equalTo: contentView.leadingAnchor, constant: 20),
+            citationValueLabel.trailingAnchor.constraint(
+                equalTo: contentView.trailingAnchor, constant: -20),
+
             // Citation Divider
             citationDividerView.topAnchor.constraint(
-                equalTo: sourceValueLabel.bottomAnchor, constant: 16),
+                equalTo: citationValueLabel.bottomAnchor, constant: 16),
             citationDividerView.leadingAnchor.constraint(
                 equalTo: contentView.leadingAnchor, constant: 20),
             citationDividerView.trailingAnchor.constraint(
@@ -284,7 +320,8 @@ class ArticleDetailViewController: UIViewController {
         authorLabel.text = "By \(article.author)"
         contentLabel.text = article.content
         readTimeLabel.text = calculateReadTime(for: article.content)
-        sourceValueLabel.text = article.source  // Assuming Article model has a 'source' property
+        sourceValueLabel.text = article.source
+        citationValueLabel.text = article.citation
     }
 
     // MARK: - Actions

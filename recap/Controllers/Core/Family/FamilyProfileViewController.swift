@@ -8,6 +8,9 @@
 import UIKit
 
 class FamilyProfileViewController: UIViewController, UITableViewDelegate, UITableViewDataSource {
+    // Property to store prefetched citations
+    private var prefetchedCitations: [Citation]?
+    private let menuTitles = ["Patients", "About App", "Language", "Privacy", "Sources", "Delete Account"]
 
     private let profileImageView: UIImageView = {
         let imageView = UIImageView()
@@ -54,6 +57,23 @@ class FamilyProfileViewController: UIViewController, UITableViewDelegate, UITabl
         setupUI()
         setupTableView()
         loadUserData()
+        prefetchCitations()
+    }
+
+    // Method to prefetch citations
+    private func prefetchCitations() {
+        // First check if the citations manager already has data
+        if !MedicalCitationsManager.shared.allCitations.isEmpty {
+            prefetchedCitations = MedicalCitationsManager.shared.allCitations
+            return
+        }
+
+        // Otherwise, force a refresh
+        MedicalCitationsManager.shared.refreshCitations { [weak self] success in
+            if success {
+                self?.prefetchedCitations = MedicalCitationsManager.shared.allCitations
+            }
+        }
     }
 
     private func setupNavigationBar() {
@@ -96,7 +116,7 @@ class FamilyProfileViewController: UIViewController, UITableViewDelegate, UITabl
             tableView.topAnchor.constraint(equalTo: nameLabel.bottomAnchor, constant: 20),
             tableView.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: 20),
             tableView.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -20),
-            tableView.bottomAnchor.constraint(equalTo: view.bottomAnchor, constant: -120),  // Increased space for logout button
+            tableView.bottomAnchor.constraint(equalTo: view.bottomAnchor, constant: -120), // Increased space for logout button
 
             logoutButton.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: 20),
             logoutButton.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -20),
@@ -121,7 +141,7 @@ class FamilyProfileViewController: UIViewController, UITableViewDelegate, UITabl
     }
 
     func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
-        return 5  // Added "Delete Account" option
+        return menuTitles.count
     }
 
     func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
@@ -129,12 +149,10 @@ class FamilyProfileViewController: UIViewController, UITableViewDelegate, UITabl
         cell.accessoryType = .disclosureIndicator
         cell.contentView.layoutMargins = UIEdgeInsets(top: 0, left: 20, bottom: 0, right: 20)
 
-        let titles = ["Patients", "About App", "Language", "Privacy", "Delete Account"]
-        cell.textLabel?.text = titles[indexPath.row]
+        cell.textLabel?.text = menuTitles[indexPath.row]
         cell.backgroundColor = .white
 
-        // Special styling for Delete Account cell
-        if indexPath.row == 4 {
+        if indexPath.row == 5 {
             cell.textLabel?.textColor = .systemRed
             cell.imageView?.image = UIImage(systemName: "trash")
             cell.imageView?.tintColor = .systemRed
@@ -146,7 +164,7 @@ class FamilyProfileViewController: UIViewController, UITableViewDelegate, UITabl
     func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
         tableView.deselectRow(at: indexPath, animated: true)
 
-        if indexPath.row == 4 {
+        if indexPath.row == 5 {
             // Handle Delete Account selection
             let deleteAccountVC = DeleteFamilyAccountViewController()
             let navController = UINavigationController(rootViewController: deleteAccountVC)
@@ -164,6 +182,12 @@ class FamilyProfileViewController: UIViewController, UITableViewDelegate, UITabl
             viewController = LanguageViewController()
         case 3:
             viewController = PrivacyViewController()
+        case 4:
+            let citationsVC = CitationsViewController()
+            if let prefetchedCitations = prefetchedCitations {
+                citationsVC.preloadedCitations = prefetchedCitations
+            }
+            viewController = citationsVC
         default:
             return
         }
@@ -173,8 +197,7 @@ class FamilyProfileViewController: UIViewController, UITableViewDelegate, UITabl
     private func loadUserData() {
         if let familyData = UserDefaults.standard.dictionary(
             forKey: Constants.UserDefaultsKeys.familyMemberDetails),
-            let name = familyData["name"] as? String
-        {
+            let name = familyData["name"] as? String {
             nameLabel.text = name
         } else {
             nameLabel.text = "Unknown Family"
@@ -185,8 +208,7 @@ class FamilyProfileViewController: UIViewController, UITableViewDelegate, UITabl
 
         if let imageUrl = UserDefaults.standard.string(
             forKey: Constants.UserDefaultsKeys.familyMemberImageURL),
-            let url = URL(string: imageUrl)
-        {
+            let url = URL(string: imageUrl) {
             profileImageView.sd_setImage(with: url, placeholderImage: placeholderImage)
         } else {
             profileImageView.image = placeholderImage

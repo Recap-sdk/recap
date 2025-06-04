@@ -10,7 +10,10 @@ import UIKit
 class FamilyProfileViewController: UIViewController, UITableViewDelegate, UITableViewDataSource {
     // Property to store prefetched citations
     private var prefetchedCitations: [Citation]?
-    private let menuTitles = ["Patients", "About App", "Language", "Privacy", "Medical Information Citations", "Delete Account"]
+    private let menuTitles = [
+        "Patients", "About App", "Language", "Privacy", "Medical Information Citations",
+        "Delete Account",
+    ]
 
     private let profileImageView: UIImageView = {
         let imageView = UIImageView()
@@ -116,7 +119,7 @@ class FamilyProfileViewController: UIViewController, UITableViewDelegate, UITabl
             tableView.topAnchor.constraint(equalTo: nameLabel.bottomAnchor, constant: 20),
             tableView.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: 20),
             tableView.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -20),
-            tableView.bottomAnchor.constraint(equalTo: view.bottomAnchor, constant: -120), // Increased space for logout button
+            tableView.bottomAnchor.constraint(equalTo: view.bottomAnchor, constant: -120),  // Increased space for logout button
 
             logoutButton.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: 20),
             logoutButton.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -20),
@@ -197,7 +200,8 @@ class FamilyProfileViewController: UIViewController, UITableViewDelegate, UITabl
     private func loadUserData() {
         if let familyData = UserDefaults.standard.dictionary(
             forKey: Constants.UserDefaultsKeys.familyMemberDetails),
-            let name = familyData["name"] as? String {
+            let name = familyData["name"] as? String
+        {
             nameLabel.text = name
         } else {
             nameLabel.text = "Unknown Family"
@@ -208,7 +212,8 @@ class FamilyProfileViewController: UIViewController, UITableViewDelegate, UITabl
 
         if let imageUrl = UserDefaults.standard.string(
             forKey: Constants.UserDefaultsKeys.familyMemberImageURL),
-            let url = URL(string: imageUrl) {
+            let url = URL(string: imageUrl)
+        {
             profileImageView.sd_setImage(with: url, placeholderImage: placeholderImage)
         } else {
             profileImageView.image = placeholderImage
@@ -216,8 +221,34 @@ class FamilyProfileViewController: UIViewController, UITableViewDelegate, UITabl
     }
 
     @objc private func logoutTapped() {
-        let familyLoginExtension = FamilyLoginViewController()
-        familyLoginExtension.logoutTapped()
+        // Create confirmation alert
+        let alert = UIAlertController(
+            title: "Logout",
+            message: "Are you sure you want to logout?",
+            preferredStyle: .alert
+        )
+
+        // Add cancel action
+        alert.addAction(
+            UIAlertAction(
+                title: "Cancel",
+                style: .cancel
+            ))
+
+        // Add confirm action
+        alert.addAction(
+            UIAlertAction(
+                title: "Logout",
+                style: .destructive,
+                handler: { [weak self] _ in
+                    // Proceed with logout
+                    let familyLoginExtension = FamilyLoginViewController()
+                    familyLoginExtension.logoutTapped()
+                }
+            ))
+
+        // Present the alert
+        present(alert, animated: true)
     }
 }
 

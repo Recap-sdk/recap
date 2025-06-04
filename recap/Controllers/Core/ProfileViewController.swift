@@ -269,8 +269,34 @@ class ProfileViewController: UIViewController {
     }
 
     @objc private func logoutTapped() {
-        let loginVC = PatientLoginViewController()
-        loginVC.logoutTapped()
+        // Create confirmation alert
+        let alert = UIAlertController(
+            title: "Logout",
+            message: "Are you sure you want to logout?",
+            preferredStyle: .alert
+        )
+
+        // Add cancel action
+        alert.addAction(
+            UIAlertAction(
+                title: "Cancel",
+                style: .cancel
+            ))
+
+        // Add confirm action
+        alert.addAction(
+            UIAlertAction(
+                title: "Logout",
+                style: .destructive,
+                handler: { [weak self] _ in
+                    // Proceed with logout
+                    let patientLoginExtension = PatientLoginViewController()
+                    patientLoginExtension.logoutTapped()
+                }
+            ))
+
+        // Present the alert
+        present(alert, animated: true)
     }
 
     private func showCopyConfirmation() {

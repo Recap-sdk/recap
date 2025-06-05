@@ -5,43 +5,44 @@
 //  Created by Diptayan Jash on 15/12/24.
 //
 
+import AuthenticationServices
+import CryptoKit
 import FirebaseAuth
 import FirebaseCore
 import FirebaseFirestore
 import GoogleSignIn
-import UIKit
 import Lottie
-import AuthenticationServices
-import CryptoKit
+import UIKit
 
 extension PatientLoginViewController {
-//    @objc func rememberMeTapped() {
-//        rememberMeButton.isSelected.toggle()
-//    }
+    //    @objc func rememberMeTapped() {
+    //        rememberMeButton.isSelected.toggle()
+    //    }
 
     @objc func loginTapped() {
         print("Login tapped")
-        
+
         // Validate input fields
         guard let email = emailField.text, !email.isEmpty,
-              let password = passwordField.text, !password.isEmpty else {
+            let password = passwordField.text, !password.isEmpty
+        else {
             showAlert(message: "Please enter both email and password.")
             return
         }
-        
+
         // Validate email format
         if !isValidEmail(email) {
             showAlert(message: "Please enter a valid email address.")
             return
         }
-        
+
         // Show loading animation
         let loadingAnimation = showLoadingAnimation()
-        
+
         // Sign in with Firebase Auth
         Auth.auth().signIn(withEmail: email, password: password) { [weak self] authResult, error in
             guard let self = self else { return }
-            
+
             if let error = error {
                 // Remove loading animation if there's an error
                 self.removeLoadingAnimation(loadingAnimation)
@@ -49,21 +50,22 @@ extension PatientLoginViewController {
                 self.showAlert(message: "Login failed: \(error.localizedDescription)")
                 return
             }
-            
+
             guard let user = authResult?.user else {
                 // Remove loading animation if no user is found
                 self.removeLoadingAnimation(loadingAnimation)
                 self.showAlert(message: "Login unsuccessful. Please try again.")
                 return
             }
-            
+
             // Store user ID in UserDefaults
             let userId = user.uid
             UserDefaults.standard.set(userId, forKey: Constants.UserDefaultsKeys.verifiedUserDocID)
             UserDefaults.standard.set(email, forKey: "userEmail")
-            
+
             // Use the existing fetchOrCreateUserProfile function for consistency
-            self.fetchOrCreateUserProfile(userId: userId, email: email, loadingAnimation: loadingAnimation)
+            self.fetchOrCreateUserProfile(
+                userId: userId, email: email, loadingAnimation: loadingAnimation)
         }
     }
 
@@ -78,7 +80,7 @@ extension PatientLoginViewController {
     // Helper method for email validation
     private func isValidEmail(_ email: String) -> Bool {
         let emailRegEx = "[A-Z0-9a-z._%+-]+@[A-Za-z0-9.-]+\\.[A-Za-z]{2,64}"
-        let emailPred = NSPredicate(format:"SELF MATCHES %@", emailRegEx)
+        let emailPred = NSPredicate(format: "SELF MATCHES %@", emailRegEx)
         return emailPred.evaluate(with: email)
     }
     @objc func googleLoginTapped() {
@@ -92,7 +94,7 @@ extension PatientLoginViewController {
 
         // Show loading animation immediately before presenting Google Sign-In
         let loadingAnimation = self.showLoadingAnimation()
-        loadingAnimation.isHidden = true // Initially hide it
+        loadingAnimation.isHidden = true  // Initially hide it
 
         GIDSignIn.sharedInstance.signIn(withPresenting: self) { [weak self] result, error in
             guard let self = self else { return }
@@ -109,7 +111,8 @@ extension PatientLoginViewController {
             }
 
             guard let user = result?.user,
-                  let idToken = user.idToken?.tokenString else {
+                let idToken = user.idToken?.tokenString
+            else {
                 // Remove loading animation if user retrieval fails
                 self.removeLoadingAnimation(loadingAnimation)
                 print("Failed to retrieve Google user")
@@ -117,7 +120,8 @@ extension PatientLoginViewController {
                 return
             }
 
-            let credential = GoogleAuthProvider.credential(withIDToken: idToken, accessToken: user.accessToken.tokenString)
+            let credential = GoogleAuthProvider.credential(
+                withIDToken: idToken, accessToken: user.accessToken.tokenString)
 
             Auth.auth().signIn(with: credential) { [weak self] authResult, authError in
                 guard let self = self else { return }
@@ -138,13 +142,18 @@ extension PatientLoginViewController {
                 }
 
                 let userId = firebaseUser.uid
-                UserDefaults.standard.set(userId, forKey: Constants.UserDefaultsKeys.verifiedUserDocID)
-                self.fetchOrCreateUserProfile(userId: userId, email: firebaseUser.email ?? "", loadingAnimation: loadingAnimation)
+                UserDefaults.standard.set(
+                    userId, forKey: Constants.UserDefaultsKeys.verifiedUserDocID)
+                self.fetchOrCreateUserProfile(
+                    userId: userId, email: firebaseUser.email ?? "",
+                    loadingAnimation: loadingAnimation)
             }
         }
     }
 
-    private func fetchOrCreateUserProfile(userId: String, email: String, loadingAnimation: LottieAnimationView) {
+    private func fetchOrCreateUserProfile(
+        userId: String, email: String, loadingAnimation: LottieAnimationView
+    ) {
         let db = Firestore.firestore()
 
         db.collection("users").document(userId).getDocument { [weak self] document, error in
@@ -160,21 +169,65 @@ extension PatientLoginViewController {
             if let document = document, document.exists {
                 // Existing user profile found
                 let userData = document.data() ?? [:]
-                
+
+                // Get current Apple Sign In name data
+                let appleFirstName =
+                    UserDefaults.standard.string(forKey: "appleSignInFirstName") ?? ""
+                let appleLastName =
+                    UserDefaults.standard.string(forKey: "appleSignInLastName") ?? ""
+                let hasAppleNameData = !appleFirstName.isEmpty || !appleLastName.isEmpty
+
+                // Check if profile name fields are empty
+                let currentFirstName = userData["firstName"] as? String ?? ""
+                let currentLastName = userData["lastName"] as? String ?? ""
+                let hasEmptyNameFields = currentFirstName.isEmpty || currentLastName.isEmpty
+
+                // If we have Apple name data and the profile has empty name fields, update the profile
+                if hasAppleNameData && hasEmptyNameFields {
+                    print("Updating existing profile with Apple Sign In name data")
+
+                    var updateData: [String: Any] = [:]
+
+                    if currentFirstName.isEmpty && !appleFirstName.isEmpty {
+                        updateData["firstName"] = appleFirstName
+                    }
+
+                    if currentLastName.isEmpty && !appleLastName.isEmpty {
+                        updateData["lastName"] = appleLastName
+                    }
+
+                    if !updateData.isEmpty {
+                        // Update the user profile with Apple Sign In name data
+                        db.collection("users").document(userId).updateData(updateData) { error in
+                            if let error = error {
+                                print(
+                                    "Error updating profile with Apple name data: \(error.localizedDescription)"
+                                )
+                            } else {
+                                print("Profile updated with Apple name data successfully")
+                            }
+                        }
+                    }
+                }
+
                 // Check if profile is complete by verifying required fields
-                let requiredFields = ["firstName", "lastName", "dateOfBirth", "sex", "bloodGroup", "stage"]
+                let requiredFields = [
+                    "firstName", "lastName", "dateOfBirth", "sex", "bloodGroup", "stage",
+                ]
                 let isProfileComplete = requiredFields.allSatisfy { field in
                     guard let value = userData[field] as? String else { return false }
                     return !value.isEmpty
                 }
-                
+
                 if isProfileComplete {
                     // Profile is complete, navigate to main view
                     print("User profile is complete, navigating to main view")
-                    UserDefaults.standard.set(true, forKey: Constants.UserDefaultsKeys.isPatientLoggedIn)
-                    UserDefaults.standard.set(true, forKey: Constants.UserDefaultsKeys.hasPatientCompletedProfile)
+                    UserDefaults.standard.set(
+                        true, forKey: Constants.UserDefaultsKeys.isPatientLoggedIn)
+                    UserDefaults.standard.set(
+                        true, forKey: Constants.UserDefaultsKeys.hasPatientCompletedProfile)
                     UserDefaults.standard.synchronize()
-                    
+
                     self.removeLoadingAnimation(loadingAnimation)
                     let tabBarVC = TabbarViewController()
                     self.navigationController?.setViewControllers([tabBarVC], animated: true)
@@ -184,7 +237,9 @@ extension PatientLoginViewController {
                     self.removeLoadingAnimation(loadingAnimation)
                     let patientInfoVC = patientInfo()
                     // Set the delegate to SceneDelegate to handle navigation after profile completion
-                    if let sceneDelegate = UIApplication.shared.connectedScenes.first?.delegate as? SceneDelegate {
+                    if let sceneDelegate = UIApplication.shared.connectedScenes.first?.delegate
+                        as? SceneDelegate
+                    {
                         patientInfoVC.delegate = sceneDelegate
                     }
                     let nav = UINavigationController(rootViewController: patientInfoVC)
@@ -201,12 +256,17 @@ extension PatientLoginViewController {
                         return
                     }
 
+                    // Get name from Apple Sign In if available
+                    let firstName =
+                        UserDefaults.standard.string(forKey: "appleSignInFirstName") ?? ""
+                    let lastName = UserDefaults.standard.string(forKey: "appleSignInLastName") ?? ""
+
                     // Initial data structure
                     let initialData: [String: Any] = [
                         "email": email,
                         "patientUID": patientUID,
-                        "firstName": "",
-                        "lastName": "",
+                        "firstName": firstName,
+                        "lastName": lastName,
                         "dateOfBirth": "",
                         "sex": "",
                         "bloodGroup": "",
@@ -220,14 +280,17 @@ extension PatientLoginViewController {
                     db.collection("users").document(userId).setData(initialData) { error in
                         if let error = error {
                             self.removeLoadingAnimation(loadingAnimation)
-                            print("Error saving initial user profile: \(error.localizedDescription)")
+                            print(
+                                "Error saving initial user profile: \(error.localizedDescription)")
                             self.showAlert(message: "Failed to create profile. Please try again.")
                         } else {
                             print("New user profile created successfully")
                             self.removeLoadingAnimation(loadingAnimation)
                             let patientInfoVC = patientInfo()
                             // Set the delegate to SceneDelegate to handle navigation after profile completion
-                            if let sceneDelegate = UIApplication.shared.connectedScenes.first?.delegate as? SceneDelegate {
+                            if let sceneDelegate = UIApplication.shared.connectedScenes.first?
+                                .delegate as? SceneDelegate
+                            {
                                 patientInfoVC.delegate = sceneDelegate
                             }
                             let nav = UINavigationController(rootViewController: patientInfoVC)
@@ -252,21 +315,66 @@ extension PatientLoginViewController {
 
             if let document = document, document.exists, let userData = document.data() {
                 print("User profile fetched successfully: \(userData)")
-                
+
+                // Get current Apple Sign In name data
+                let appleFirstName =
+                    UserDefaults.standard.string(forKey: "appleSignInFirstName") ?? ""
+                let appleLastName =
+                    UserDefaults.standard.string(forKey: "appleSignInLastName") ?? ""
+                let hasAppleNameData = !appleFirstName.isEmpty || !appleLastName.isEmpty
+
+                // Check if profile name fields are empty
+                let currentFirstName = userData["firstName"] as? String ?? ""
+                let currentLastName = userData["lastName"] as? String ?? ""
+                let hasEmptyNameFields = currentFirstName.isEmpty || currentLastName.isEmpty
+
+                // If we have Apple name data and the profile has empty name fields, update the profile
+                if hasAppleNameData && hasEmptyNameFields {
+                    print("Updating existing profile with Apple Sign In name data")
+
+                    var updateData: [String: Any] = [:]
+
+                    if currentFirstName.isEmpty && !appleFirstName.isEmpty {
+                        updateData["firstName"] = appleFirstName
+                    }
+
+                    if currentLastName.isEmpty && !appleLastName.isEmpty {
+                        updateData["lastName"] = appleLastName
+                    }
+
+                    if !updateData.isEmpty {
+                        // Update the user profile with Apple Sign In name data
+                        db.collection("users").document(userId).updateData(updateData) { error in
+                            if let error = error {
+                                print(
+                                    "Error updating profile with Apple name data: \(error.localizedDescription)"
+                                )
+                            } else {
+                                print("Profile updated with Apple name data successfully")
+                            }
+                        }
+                    }
+                }
+
                 // Check if profile is complete by verifying required fields
-                let requiredFields = ["firstName", "lastName", "dateOfBirth", "sex", "bloodGroup", "stage"]
+                let requiredFields = [
+                    "firstName", "lastName", "dateOfBirth", "sex", "bloodGroup", "stage",
+                ]
                 let isProfileComplete = requiredFields.allSatisfy { field in
                     guard let value = userData[field] as? String else { return false }
                     return !value.isEmpty
                 }
-                
+
                 if isProfileComplete {
                     // Profile is complete, navigate to main view
-                    UserDefaults.standard.set(true, forKey: Constants.UserDefaultsKeys.isPatientLoggedIn)
-                    UserDefaults.standard.set(true, forKey: Constants.UserDefaultsKeys.hasPatientCompletedProfile)
+                    UserDefaults.standard.set(
+                        true, forKey: Constants.UserDefaultsKeys.isPatientLoggedIn)
+                    UserDefaults.standard.set(
+                        true, forKey: Constants.UserDefaultsKeys.hasPatientCompletedProfile)
                     UserDefaults.standard.synchronize()
-                    
-                    UserDefaultsStorageProfile.shared.saveProfile(details: userData, image: nil) { [weak self] success in
+
+                    UserDefaultsStorageProfile.shared.saveProfile(details: userData, image: nil) {
+                        [weak self] success in
                         if success {
                             let mainVC = TabbarViewController()
                             self?.navigationController?.setViewControllers([mainVC], animated: true)
@@ -280,7 +388,9 @@ extension PatientLoginViewController {
                     print("User profile is incomplete, navigating to profile completion")
                     let patientInfoVC = patientInfo()
                     // Set the delegate to SceneDelegate to handle navigation after profile completion
-                    if let sceneDelegate = UIApplication.shared.connectedScenes.first?.delegate as? SceneDelegate {
+                    if let sceneDelegate = UIApplication.shared.connectedScenes.first?.delegate
+                        as? SceneDelegate
+                    {
                         patientInfoVC.delegate = sceneDelegate
                     }
                     let nav = UINavigationController(rootViewController: patientInfoVC)
@@ -291,7 +401,9 @@ extension PatientLoginViewController {
                 print("User profile not found. Redirecting to profile setup.")
                 let patientInfoVC = patientInfo()
                 // Set the delegate to SceneDelegate to handle navigation after profile completion
-                if let sceneDelegate = UIApplication.shared.connectedScenes.first?.delegate as? SceneDelegate {
+                if let sceneDelegate = UIApplication.shared.connectedScenes.first?.delegate
+                    as? SceneDelegate
+                {
                     patientInfoVC.delegate = sceneDelegate
                 }
                 let nav = UINavigationController(rootViewController: patientInfoVC)
@@ -303,75 +415,78 @@ extension PatientLoginViewController {
 
     @objc func appleLoginTapped() {
         print("Apple login tapped")
-        
+
         // Show loading animation immediately before presenting Apple Sign-In
         let loadingAnimation = self.showLoadingAnimation()
-        loadingAnimation.isHidden = true // Initially hide it
-        
+        loadingAnimation.isHidden = true  // Initially hide it
+
         // Start the Apple Sign In flow
         startSignInWithAppleFlow()
     }
-    
+
     // MARK: - Apple Sign In
     private func startSignInWithAppleFlow() {
         print("Starting Apple Sign In flow")
-        
+
         // Generate a new nonce for each sign-in attempt
         let nonce = randomNonceString()
         self.currentNonce = nonce
         print("Generated nonce: \(nonce)")
-        
+
         let appleIDProvider = ASAuthorizationAppleIDProvider()
         let request = appleIDProvider.createRequest()
         request.requestedScopes = [.fullName, .email]
         request.nonce = sha256(nonce)
-        
+
         print("Created Apple ID request with nonce hash: \(sha256(nonce))")
-        
+
         // Create an authorization controller with the request
         let authorizationController = ASAuthorizationController(authorizationRequests: [request])
-        
+
         // Set delegate and presentation context provider
         authorizationController.delegate = self
         authorizationController.presentationContextProvider = self
-        
+
         // Perform the request
         print("Performing Apple Sign-In request")
         authorizationController.performRequests()
         print("Apple Sign-In request performed successfully")
     }
-    
+
     private func randomNonceString(length: Int = 32) -> String {
         precondition(length > 0)
-        let charset: [Character] = Array("0123456789ABCDEFGHIJKLMNOPQRSTUVXYZabcdefghijklmnopqrstuvwxyz-._")
+        let charset: [Character] = Array(
+            "0123456789ABCDEFGHIJKLMNOPQRSTUVXYZabcdefghijklmnopqrstuvwxyz-._")
         var result = ""
         var remainingLength = length
-        
+
         while remainingLength > 0 {
-            let randoms: [UInt8] = (0 ..< 16).map { _ in
+            let randoms: [UInt8] = (0..<16).map { _ in
                 var random: UInt8 = 0
                 let errorCode = SecRandomCopyBytes(kSecRandomDefault, 1, &random)
                 if errorCode != errSecSuccess {
-                    fatalError("Unable to generate nonce. SecRandomCopyBytes failed with OSStatus \(errorCode)")
+                    fatalError(
+                        "Unable to generate nonce. SecRandomCopyBytes failed with OSStatus \(errorCode)"
+                    )
                 }
                 return random
             }
-            
+
             randoms.forEach { random in
                 if remainingLength == 0 {
                     return
                 }
-                
+
                 if random < charset.count {
                     result.append(charset[Int(random)])
                     remainingLength -= 1
                 }
             }
         }
-        
+
         return result
     }
-    
+
     private func sha256(_ input: String) -> String {
         let inputData = Data(input.utf8)
         let hashedData = SHA256.hash(data: inputData)
@@ -405,15 +520,22 @@ extension PatientLoginViewController {
             let navigationController = UINavigationController(rootViewController: welcomeVC)
 
             // Set the initial position of the new view controller off-screen
-            navigationController.view.frame = CGRect(x: 0, y: window.frame.height, width: window.frame.width, height: window.frame.height)
+            navigationController.view.frame = CGRect(
+                x: 0, y: window.frame.height, width: window.frame.width, height: window.frame.height
+            )
             window.rootViewController = navigationController
             window.makeKeyAndVisible()
 
             // Animate the transition
-            UIView.animate(withDuration: 0.5, animations: {
-                self.view.frame = CGRect(x: 0, y: window.frame.height, width: window.frame.width, height: window.frame.height)
-                navigationController.view.frame = window.bounds
-            }) { _ in
+            UIView.animate(
+                withDuration: 0.5,
+                animations: {
+                    self.view.frame = CGRect(
+                        x: 0, y: window.frame.height, width: window.frame.width,
+                        height: window.frame.height)
+                    navigationController.view.frame = window.bounds
+                }
+            ) { _ in
                 window.rootViewController = navigationController
             }
         } catch {
@@ -424,105 +546,156 @@ extension PatientLoginViewController {
     }
 
     // MARK: - ASAuthorizationControllerDelegate
-    func authorizationController(controller: ASAuthorizationController, didCompleteWithAuthorization authorization: ASAuthorization) {
+    func authorizationController(
+        controller: ASAuthorizationController,
+        didCompleteWithAuthorization authorization: ASAuthorization
+    ) {
         print("Apple Sign-In authorization completed successfully")
-        
+
         if let appleIDCredential = authorization.credential as? ASAuthorizationAppleIDCredential {
             guard let nonce = currentNonce else {
                 print("ERROR: No nonce found for Apple Sign-In")
                 showAlert(message: "Apple Sign-In failed: Invalid state. Please try again.")
                 return
             }
-            
+
             // Clear current nonce after retrieving it to prevent reuse
             currentNonce = nil
-            
+
             guard let appleIDToken = appleIDCredential.identityToken else {
                 print("ERROR: No identity token received from Apple")
                 showAlert(message: "Apple Sign-In failed: Unable to fetch identity token.")
                 return
             }
-            
+
             guard let idTokenString = String(data: appleIDToken, encoding: .utf8) else {
                 print("ERROR: Unable to convert identity token to string")
                 showAlert(message: "Apple Sign-In failed: Unable to process identity token.")
                 return
             }
-            
+
             print("Successfully obtained Apple ID token")
-            
+
             // Get user information
             let userIdentifier = appleIDCredential.user
             let fullName = appleIDCredential.fullName
+            let firstName = fullName?.givenName ?? ""
+            let lastName = fullName?.familyName ?? ""
             let email = appleIDCredential.email
-            
+
             print("User ID: \(userIdentifier)")
             print("Email: \(email ?? "Not provided")")
-            print("Full Name: \(fullName?.givenName ?? "Not provided") \(fullName?.familyName ?? "")")
-            
+            print("Name: \(fullName)")
+            print("Full Name: \(firstName) \(lastName)")
+
             // Create Firebase credential
             let credential = OAuthProvider.credential(
                 withProviderID: "apple.com",
                 idToken: idTokenString,
                 rawNonce: nonce
             )
-            
+
             print("Created Firebase credential with Apple ID token")
-            
+
             // Show loading animation
             let loadingAnimation = self.showLoadingAnimation()
-            
+
             // Sign in with Firebase
             Auth.auth().signIn(with: credential) { [weak self] (authResult, error) in
                 guard let self = self else { return }
-                
+
                 // Hide loading animation
                 loadingAnimation.isHidden = true
-                
+
                 if let error = error {
                     print("ERROR: Firebase sign-in failed: \(error.localizedDescription)")
                     self.showAlert(message: "Apple Sign-In failed: \(error.localizedDescription)")
                     return
                 }
-                
+
                 guard let authResult = authResult else {
                     print("ERROR: Firebase auth result is nil")
-                    self.showAlert(message: "Apple Sign-In failed: Authentication result is missing.")
+                    self.showAlert(
+                        message: "Apple Sign-In failed: Authentication result is missing.")
                     return
                 }
-                
+
                 print("Firebase sign-in successful for user: \(authResult.user.uid)")
-                
+
                 // Check if this is a new user
                 let isNewUser = authResult.additionalUserInfo?.isNewUser ?? false
                 print("Is new user: \(isNewUser)")
-                
+
                 // Store user ID in UserDefaults
                 let userId = authResult.user.uid
-                UserDefaults.standard.set(userId, forKey: Constants.UserDefaultsKeys.verifiedUserDocID)
+                UserDefaults.standard.set(
+                    userId, forKey: Constants.UserDefaultsKeys.verifiedUserDocID)
                 UserDefaults.standard.set(email ?? authResult.user.email ?? "", forKey: "userEmail")
-                
+
+                // Store name information - this is critical because Apple only provides this on first sign-in
+                // We need to preserve it for account creation or profile updates
+                if !firstName.isEmpty || !lastName.isEmpty {
+                    // Save to UserDefaults to be used across the app
+                    UserDefaults.standard.set(firstName, forKey: "appleSignInFirstName")
+                    UserDefaults.standard.set(lastName, forKey: "appleSignInLastName")
+
+                    // Also store permanently with the user ID to handle future sign-ins
+                    // when Apple no longer provides name data
+                    let appleUserDataKey = "appleUser_\(userIdentifier)"
+                    let userData: [String: String] = [
+                        "firstName": firstName,
+                        "lastName": lastName,
+                        "email": email ?? "",
+                    ]
+                    UserDefaults.standard.set(userData, forKey: appleUserDataKey)
+                } else {
+                    // If Apple didn't send name info (subsequent sign-ins), try to get it from stored data
+                    let appleUserDataKey = "appleUser_\(userIdentifier)"
+                    if let userData = UserDefaults.standard.dictionary(forKey: appleUserDataKey)
+                        as? [String: String]
+                    {
+                        let storedFirstName = userData["firstName"] ?? ""
+                        let storedLastName = userData["lastName"] ?? ""
+
+                        if !storedFirstName.isEmpty {
+                            UserDefaults.standard.set(
+                                storedFirstName, forKey: "appleSignInFirstName")
+                        }
+                        if !storedLastName.isEmpty {
+                            UserDefaults.standard.set(storedLastName, forKey: "appleSignInLastName")
+                        }
+
+                        print(
+                            "Retrieved stored Apple user data: \(storedFirstName) \(storedLastName)"
+                        )
+                    }
+                }
+
                 // Use the existing fetchOrCreateUserProfile function for consistency
-                self.fetchOrCreateUserProfile(userId: userId, email: email ?? authResult.user.email ?? "", loadingAnimation: loadingAnimation)
+                self.fetchOrCreateUserProfile(
+                    userId: userId, email: email ?? authResult.user.email ?? "",
+                    loadingAnimation: loadingAnimation)
             }
         } else {
             print("ERROR: Authorization credential is not an Apple ID credential")
             showAlert(message: "Apple Sign-In failed: Invalid credential type.")
         }
     }
-    
-    func authorizationController(controller: ASAuthorizationController, didCompleteWithError error: Error) {
+
+    func authorizationController(
+        controller: ASAuthorizationController, didCompleteWithError error: Error
+    ) {
         print("ERROR: Apple Sign-In authorization failed: \(error.localizedDescription)")
-        
+
         // Clear nonce when authorization fails to prevent stale nonce
         currentNonce = nil
-        
+
         // Check for specific error types
         if let authError = error as? ASAuthorizationError {
             switch authError.code {
             case .canceled:
                 print("User canceled the Apple Sign-In process")
-                // Don't show an alert for user cancellation
+            // Don't show an alert for user cancellation
             case .failed:
                 print("Apple Sign-In failed: \(authError.localizedDescription)")
                 showAlert(message: "Apple Sign-In failed. Please try again.")
@@ -534,10 +707,12 @@ extension PatientLoginViewController {
                 showAlert(message: "Apple Sign-In request was not handled. Please try again.")
             case .unknown:
                 print("Unknown error during Apple Sign-In: \(authError.localizedDescription)")
-                showAlert(message: "An unknown error occurred during Apple Sign-In. Please try again.")
+                showAlert(
+                    message: "An unknown error occurred during Apple Sign-In. Please try again.")
             @unknown default:
                 print("Unhandled Apple Sign-In error: \(authError.localizedDescription)")
-                showAlert(message: "An unexpected error occurred during Apple Sign-In. Please try again.")
+                showAlert(
+                    message: "An unexpected error occurred during Apple Sign-In. Please try again.")
             }
         } else {
             // Handle other types of errors

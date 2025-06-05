@@ -96,26 +96,33 @@ class patientInfo: UIViewController {
         setupImagePicker()
         setupPickers()
         setupTextFields()
-        
+
         setupKeyboardNotifications()
 
         // Prevent dismissal by swipe down gesture
         if #available(iOS 13.0, *) {
             isModalInPresentation = true
         }
+
+        // Get profile image from Google Sign In
         if let user = GIDSignIn.sharedInstance.currentUser,
-           let imageURL = user.profile?.imageURL(withDimension: 200) {
+            let imageURL = user.profile?.imageURL(withDimension: 200)
+        {
             downloadImage(from: imageURL)
         }
+
+        // Pre-fill name fields using data from Apple Sign In
+        prefillNameFields()
     }
     override func viewWillDisappear(_ animated: Bool) {
-            super.viewWillDisappear(animated)
-            removeKeyboardNotifications()
-        }
+        super.viewWillDisappear(animated)
+        removeKeyboardNotifications()
+    }
 
     private func downloadImage(from url: URL) {
         URLSession.shared.dataTask(with: url) { [weak self] data, _, error in
-            guard let self = self, error == nil, let data = data, let image = UIImage(data: data) else {
+            guard let self = self, error == nil, let data = data, let image = UIImage(data: data)
+            else {
                 print("Failed to download image: \(error?.localizedDescription ?? "Unknown error")")
                 return
             }
@@ -171,7 +178,8 @@ class patientInfo: UIViewController {
 
             saveButton.topAnchor.constraint(equalTo: stackView.bottomAnchor, constant: 32),
             saveButton.leadingAnchor.constraint(equalTo: contentView.leadingAnchor, constant: 20),
-            saveButton.trailingAnchor.constraint(equalTo: contentView.trailingAnchor, constant: -20),
+            saveButton.trailingAnchor.constraint(
+                equalTo: contentView.trailingAnchor, constant: -20),
             saveButton.heightAnchor.constraint(equalToConstant: 50),
             saveButton.bottomAnchor.constraint(equalTo: contentView.bottomAnchor, constant: -20),
         ])
@@ -248,7 +256,8 @@ class patientInfo: UIViewController {
             target: self,
             action: #selector(dismissPicker)
         )
-        let flexSpace = UIBarButtonItem(barButtonSystemItem: .flexibleSpace, target: nil, action: nil)
+        let flexSpace = UIBarButtonItem(
+            barButtonSystemItem: .flexibleSpace, target: nil, action: nil)
         toolbar.setItems([flexSpace, doneButton], animated: false)
 
         return toolbar
@@ -285,7 +294,10 @@ class patientInfo: UIViewController {
     }
 
     @objc private func keyboardWillShow(notification: Notification) {
-        guard let keyboardFrame = notification.userInfo?[UIResponder.keyboardFrameEndUserInfoKey] as? CGRect else { return }
+        guard
+            let keyboardFrame = notification.userInfo?[UIResponder.keyboardFrameEndUserInfoKey]
+                as? CGRect
+        else { return }
 
         let contentInsets = UIEdgeInsets(top: 0, left: 0, bottom: keyboardFrame.height, right: 0)
         scrollView.contentInset = contentInsets
@@ -346,11 +358,12 @@ class patientInfo: UIViewController {
 
     @objc private func saveButtonTapped() {
         guard let firstName = firstNameField.text, !firstName.isEmpty,
-              let lastName = lastNameField.text, !lastName.isEmpty,
-              let dob = dobField.text, !dob.isEmpty,
-              let sex = sexField.text, !sex.isEmpty,
-              let bloodGroup = bloodGroupField.text, !bloodGroup.isEmpty,
-              let stage = stageField.text, !stage.isEmpty else {
+            let lastName = lastNameField.text, !lastName.isEmpty,
+            let dob = dobField.text, !dob.isEmpty,
+            let sex = sexField.text, !sex.isEmpty,
+            let bloodGroup = bloodGroupField.text, !bloodGroup.isEmpty,
+            let stage = stageField.text, !stage.isEmpty
+        else {
             showLocalAlert(message: "Please fill in all fields")
             return
         }
@@ -367,7 +380,9 @@ class patientInfo: UIViewController {
             return
         }
 
-        let profileImageURL = GIDSignIn.sharedInstance.currentUser?.profile?.imageURL(withDimension: 200)?.absoluteString ?? ""
+        let profileImageURL =
+            GIDSignIn.sharedInstance.currentUser?.profile?.imageURL(withDimension: 200)?
+            .absoluteString ?? ""
 
         let updatedData: [String: Any] = [
             "firstName": firstName,
@@ -393,9 +408,16 @@ class patientInfo: UIViewController {
                 } else {
                     print("Profile updated successfully")
 
-                    UserDefaultsStorageProfile.shared.saveProfile(details: updatedData, image: nil) { success in
+                    UserDefaultsStorageProfile.shared.saveProfile(details: updatedData, image: nil)
+                    { success in
                         if success {
-                            UserDefaults.standard.set(true, forKey: Constants.UserDefaultsKeys.hasPatientCompletedProfile)
+                            UserDefaults.standard.set(
+                                true, forKey: Constants.UserDefaultsKeys.hasPatientCompletedProfile)
+
+                            // Now that we've successfully saved the profile, clear the Apple Sign In name data
+                            UserDefaults.standard.removeObject(forKey: "appleSignInFirstName")
+                            UserDefaults.standard.removeObject(forKey: "appleSignInLastName")
+
                             UserDefaults.standard.synchronize()
 
                             if let delegate = self?.delegate {
@@ -403,12 +425,15 @@ class patientInfo: UIViewController {
                             } else {
                                 // Fallback if delegate is not set
                                 let tabBarVC = TabbarViewController()
-                                guard let window = UIApplication.shared.windows.first else { return }
+                                guard let window = UIApplication.shared.windows.first else {
+                                    return
+                                }
                                 window.rootViewController = tabBarVC
                                 window.makeKeyAndVisible()
                             }
                         } else {
-                            self?.showLocalAlert(message: "Failed to save profile locally. Please try again.")
+                            self?.showLocalAlert(
+                                message: "Failed to save profile locally. Please try again.")
                         }
                     }
                 }
@@ -418,16 +443,45 @@ class patientInfo: UIViewController {
 
     // Local alert method that doesn't dismiss the view controller
     private func showLocalAlert(message: String) {
-        let alertController = UIAlertController(title: "Notice", message: message, preferredStyle: .alert)
+        let alertController = UIAlertController(
+            title: "Notice", message: message, preferredStyle: .alert)
         alertController.addAction(UIAlertAction(title: "OK", style: .default))
         present(alertController, animated: true)
+    }
+
+    private func prefillNameFields() {
+        // First check if we already have values in the fields (might be from previous user input)
+        if (firstNameField.text?.isEmpty ?? true) || (lastNameField.text?.isEmpty ?? true) {
+            // Check for data from Apple Sign In
+            if let firstName = UserDefaults.standard.string(forKey: "appleSignInFirstName"),
+                !firstName.isEmpty
+            {
+                firstNameField.text = firstName
+            }
+
+            if let lastName = UserDefaults.standard.string(forKey: "appleSignInLastName"),
+                !lastName.isEmpty
+            {
+                lastNameField.text = lastName
+            }
+
+            if firstNameField.text?.isEmpty == false || lastNameField.text?.isEmpty == false {
+                print("Pre-filled name fields with data from Apple Sign In")
+            }
+        }
+
+        // Only clear the values when the form is successfully submitted
+        // We'll clear them in saveButtonTapped() after successful submission
     }
 }
 
 // MARK: - UIImagePickerControllerDelegate
 
 extension patientInfo: UIImagePickerControllerDelegate, UINavigationControllerDelegate {
-    func imagePickerController(_ picker: UIImagePickerController, didFinishPickingMediaWithInfo info: [UIImagePickerController.InfoKey: Any]) {
+    func imagePickerController(
+        _ picker: UIImagePickerController,
+        didFinishPickingMediaWithInfo info: [UIImagePickerController.InfoKey: Any]
+    ) {
         if let image = info[.editedImage] as? UIImage {
             profileImageView.image = image
         }
@@ -438,7 +492,10 @@ extension patientInfo: UIImagePickerControllerDelegate, UINavigationControllerDe
 // MARK: - UITextFieldDelegate
 
 extension patientInfo: UITextFieldDelegate {
-    func textField(_ textField: UITextField, shouldChangeCharactersIn range: NSRange, replacementString string: String) -> Bool {
+    func textField(
+        _ textField: UITextField, shouldChangeCharactersIn range: NSRange,
+        replacementString string: String
+    ) -> Bool {
         // Add validation logic for DOB, sex, and blood group if needed
         return true
     }
@@ -464,7 +521,9 @@ extension patientInfo: UIPickerViewDelegate, UIPickerViewDataSource {
         }
     }
 
-    func pickerView(_ pickerView: UIPickerView, titleForRow row: Int, forComponent component: Int) -> String? {
+    func pickerView(_ pickerView: UIPickerView, titleForRow row: Int, forComponent component: Int)
+        -> String?
+    {
         switch pickerView {
         case sexPicker:
             return sexOptions[row]

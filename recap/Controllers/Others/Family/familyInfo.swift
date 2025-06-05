@@ -23,7 +23,7 @@ struct FamilyMemberDetails {
             "dateOfBirth": dateOfBirth,
             "relationship": relationship,
             "bloodGroup": bloodGroup,
-            "id": id
+            "id": id,
         ]
     }
 }
@@ -102,6 +102,7 @@ class familyInfo: UIViewController {
         title = "Add Family Member"
         super.viewDidLoad()
         setupUI()
+        prefillNameFields()
     }
 
     private func setupUI() {
@@ -117,7 +118,8 @@ class familyInfo: UIViewController {
         }
 
         NSLayoutConstraint.activate([
-            profileImageView.topAnchor.constraint(equalTo: view.safeAreaLayoutGuide.topAnchor, constant: 20),
+            profileImageView.topAnchor.constraint(
+                equalTo: view.safeAreaLayoutGuide.topAnchor, constant: 20),
             profileImageView.centerXAnchor.constraint(equalTo: view.centerXAnchor),
             profileImageView.widthAnchor.constraint(equalToConstant: 100),
             profileImageView.heightAnchor.constraint(equalToConstant: 100),
@@ -126,7 +128,8 @@ class familyInfo: UIViewController {
             stackView.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: 20),
             stackView.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -20),
 
-            saveButton.bottomAnchor.constraint(equalTo: view.safeAreaLayoutGuide.bottomAnchor, constant: -20),
+            saveButton.bottomAnchor.constraint(
+                equalTo: view.safeAreaLayoutGuide.bottomAnchor, constant: -20),
             saveButton.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: 20),
             saveButton.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -20),
             saveButton.heightAnchor.constraint(equalToConstant: 50),
@@ -135,12 +138,28 @@ class familyInfo: UIViewController {
         saveButton.addTarget(self, action: #selector(saveButtonTapped), for: .touchUpInside)
     }
 
+    private func prefillNameFields() {
+        // Check for Apple Sign In name data in UserDefaults
+        if let firstName = UserDefaults.standard.string(forKey: "appleSignInFirstName"),
+            let lastName = UserDefaults.standard.string(forKey: "appleSignInLastName")
+        {
+            // Only prefill if the fields are currently empty
+            if firstNameField.text?.isEmpty ?? true {
+                firstNameField.text = firstName
+            }
+            if lastNameField.text?.isEmpty ?? true {
+                lastNameField.text = lastName
+            }
+        }
+    }
+
     @objc private func saveButtonTapped() {
         guard let firstName = firstNameField.text, !firstName.isEmpty,
-              let lastName = lastNameField.text, !lastName.isEmpty,
-              let dob = dobField.text, !dob.isEmpty,
-              let relationship = relationshipField.text, !relationship.isEmpty,
-              let bloodGroup = bloodGroupField.text, !bloodGroup.isEmpty else {
+            let lastName = lastNameField.text, !lastName.isEmpty,
+            let dob = dobField.text, !dob.isEmpty,
+            let relationship = relationshipField.text, !relationship.isEmpty,
+            let bloodGroup = bloodGroupField.text, !bloodGroup.isEmpty
+        else {
             showAlert(message: "Please fill in all fields")
             return
         }
@@ -150,7 +169,9 @@ class familyInfo: UIViewController {
             return
         }
 
-        let familyMemberDetails = FamilyMemberDetails(firstName: firstName, lastName: lastName, dateOfBirth: dob, relationship: relationship, bloodGroup: bloodGroup, id: userId)
+        let familyMemberDetails = FamilyMemberDetails(
+            firstName: firstName, lastName: lastName, dateOfBirth: dob, relationship: relationship,
+            bloodGroup: bloodGroup, id: userId)
 
         // Save to UserDefaults
         UserDefaultsStorageProfile.shared.saveProfile(
@@ -158,6 +179,10 @@ class familyInfo: UIViewController {
             image: profileImageView.image
         ) { [weak self] success in
             if success {
+                // Clean up Apple Sign In data from UserDefaults after successful save
+                UserDefaults.standard.removeObject(forKey: "appleSignInFirstName")
+                UserDefaults.standard.removeObject(forKey: "appleSignInLastName")
+
                 self?.delegate?.didSaveFamilyMember(familyMemberDetails)
                 self?.navigationController?.popViewController(animated: true)
             } else {
